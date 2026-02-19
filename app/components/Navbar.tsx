@@ -20,7 +20,6 @@ function Navbar() {
               ReadyMealz
             </h1>
           </Link>
-
           {/* Desktop Menu */}
           <ul className="hidden md:flex items-center gap-8 text-gray-600 font-medium">
             <li>
@@ -83,7 +82,7 @@ function Navbar() {
         <div className="md:hidden bg-white border-t shadow-md">
           <ul className="flex flex-col items-center gap-6 py-6 text-gray-700 font-medium">
             <li>
-              <Link href="/menu" onClick={() => setOpen(false)}>
+              <Link href="/" onClick={() => setOpen(false)}>
                 Menu
               </Link>
             </li>
@@ -102,12 +101,10 @@ function Navbar() {
                 Features
               </Link>
             </li>
-
             <div className="flex items-center gap-2 text-gray-600">
               <FiMapPin />
               <span>Bhopal</span>
             </div>
-
             <Link
               href="/cart"
               onClick={() => setOpen(false)}
@@ -131,5 +128,4 @@ function Navbar() {
     </nav>
   );
 }
-
 export default Navbar;
