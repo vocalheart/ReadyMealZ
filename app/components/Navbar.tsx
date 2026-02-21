@@ -61,7 +61,7 @@ function Navbar() {
             </Link>
 
             {/* User */}
-            <Link href="/profile">
+            <Link href="/account">
               <FiUser size={20} className="cursor-pointer" />
             </Link>
           </div>
@@ -115,7 +115,7 @@ function Navbar() {
             </Link>
 
             <Link
-              href="/profile"
+              href="/account"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2"
             >
