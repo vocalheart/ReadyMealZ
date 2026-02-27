@@ -81,7 +81,6 @@ const VALID_COUPONS: Record<string, number> = {
   SAVE30: 30,
   TIFFIN20: 20,
 };
-
 // --- Cart Item Component ---
 function CartItemCard({
   item,

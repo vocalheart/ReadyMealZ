@@ -1,22 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  PauseCircle,
-  SkipForward,
-  Gift,
-  Pencil,
-  Clock3,
-  Calendar,
-  MapPin,
-  Trash2,
-  Plus,
-  User,
-  CreditCard,
-  ShoppingBag,
-  Home,
-  Wallet,
-} from "lucide-react"
+import { PauseCircle, SkipForward, Gift, Pencil, Clock3, Calendar, MapPin, Trash2, Plus,User,CreditCard,ShoppingBag,Home,Wallet,} from "lucide-react"
 
 type Tab = "subscriptions" | "orders" | "wallet" | "addresses" | "profile"
 
@@ -88,7 +73,6 @@ function SubscriptionsTab() {
           </div>
         </div>
       </div>
-
       {/* Subscription History */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Subscription History</h2>
@@ -177,7 +161,6 @@ function WalletTab() {
     { label: "Referral bonus", date: "Feb 16, 2026", amount: "+₹50", color: "text-green-500" },
     { label: "Order #ORD-002", date: "Feb 18, 2026", amount: "-₹230", color: "text-red-500" },
   ]
-
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 text-center">
@@ -272,7 +255,6 @@ function ProfileTab() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5 sm:mb-6">Personal Information</h2>
-
       <div className="space-y-4">
         {/* First + Last Name: stack on mobile, side-by-side on sm+ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -315,7 +297,6 @@ function ProfileTab() {
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:border-orange-400 transition-colors"
           />
         </div>
-
         <button className="w-full sm:w-auto px-6 py-2.5 bg-orange-500 text-white font-medium rounded-xl hover:bg-orange-600 transition-colors text-sm">
           Save Changes
         </button>
