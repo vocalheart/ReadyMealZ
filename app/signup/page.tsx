@@ -1,37 +1,50 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface SignupForm {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export default function SignupPage() {
-  const [form, setForm] = useState({
+  const router = useRouter();
+
+  const [form, setForm] = useState<SignupForm>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  //  TypeScript-safe change handler
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSignup = async (e) => {
+  // TypeScript-safe submit handler
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     if (form.password !== form.confirmPassword) {
-      return setError("Passwords do not match");
+      setError("Passwords do not match");
+      return;
     }
 
     try {
       setLoading(true);
 
-      // 🔗 Replace with your backend API
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: {
@@ -44,16 +57,28 @@ export default function SignupPage() {
         }),
       });
 
-      const data = await res.json();
+      const data: { message?: string; token?: string } = await res.json();
 
       if (!res.ok) {
         throw new Error(data.message || "Signup failed");
       }
 
+      // Optional: store token if backend sends JWT
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       alert("Signup Successful!");
-      window.location.href = "/login";
-    } catch (err) {
-      setError(err.message);
+
+      // Better redirect (Next.js way)
+      router.push("/login");
+    } catch (err: unknown) {
+      //  Safe error handling (fixes TS build crash)
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -76,6 +101,7 @@ export default function SignupPage() {
         )}
 
         <form onSubmit={handleSignup} className="space-y-4">
+          {/* Name */}
           <input
             type="text"
             name="name"
@@ -86,6 +112,7 @@ export default function SignupPage() {
             required
           />
 
+          {/* Email */}
           <input
             type="email"
             name="email"
@@ -96,6 +123,7 @@ export default function SignupPage() {
             required
           />
 
+          {/* Password */}
           <input
             type="password"
             name="password"
@@ -106,6 +134,7 @@ export default function SignupPage() {
             required
           />
 
+          {/* Confirm Password */}
           <input
             type="password"
             name="confirmPassword"
@@ -116,10 +145,11 @@ export default function SignupPage() {
             required
           />
 
+          {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition disabled:opacity-70"
           >
             {loading ? "Creating Account..." : "Sign Up"}
           </button>

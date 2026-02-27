@@ -1,53 +1,73 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface LoginForm {
+  identifier: string; // email or mobile
+  password: string;
+}
 
 export default function LoginPage() {
-  const [form, setForm] = useState({
-    identifier: "", // email or mobile
+  const router = useRouter();
+
+  const [form, setForm] = useState<LoginForm>({
+    identifier: "",
     password: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  // ✅ Proper Type for input change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleLogin = async (e) => {
+  // ✅ Proper Type for form submit
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     try {
       setLoading(true);
 
-      // 🔗 Replace with your backend API (Node/Express)
       const res = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          identifier: form.identifier, // email or phone
+          identifier: form.identifier,
           password: form.password,
         }),
       });
 
-      const data = await res.json();
+      const data: { message?: string; token?: string } = await res.json();
 
       if (!res.ok) {
         throw new Error(data.message || "Login failed");
       }
 
-      alert("Login Successful!");
-      // redirect after login
-      window.location.href = "/";
-    } catch (err) {
-      setError(err.message);
+      // Optional: store token (if backend sends JWT)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      // ✅ Better than window.location.href in Next.js
+      router.push("/");
+    } catch (err: unknown) {
+      // ✅ Safe error handling (TypeScript strict)
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -81,6 +101,7 @@ export default function LoginPage() {
             required
           />
 
+          {/* Password */}
           <input
             type="password"
             name="password"
@@ -91,10 +112,11 @@ export default function LoginPage() {
             required
           />
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition disabled:opacity-70"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
