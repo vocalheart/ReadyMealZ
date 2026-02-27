@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -6,7 +7,7 @@ import Image from "next/image";
 import api from "../lib/axios";
 import chefImage from "../../public/auth-chef.png"; // your image
 
-// 🔹 Icons (SVG - lightweight & professional)
+// Icons (kept your SVGs)
 const UserIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -80,62 +81,64 @@ export default function SignupPage() {
       const res = await api.post("/user/signup", form);
 
       if (!res.data.success) {
-        throw new Error(res.data.message);
+        throw new Error(res.data.message || "Signup failed");
       }
 
+      // Optional: you might want to use cookies or redux here instead of localStorage
       localStorage.setItem("user", JSON.stringify(res.data.user));
       router.push("/login");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Signup failed");
+      setError(err?.response?.data?.message || "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      
-      {/* LEFT IMAGE SECTION */}
-      <div className="hidden lg:flex w-1/2 relative items-center justify-center bg-gradient-to-br from-green-50 to-orange-50">
-        <div className="absolute top-12 left-12">
-          <h1 className="text-4xl font-bold text-gray-800 leading-tight">
-            Join ReadyMealz 
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      {/* LEFT - Illustration Section (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center bg-gradient-to-br from-green-50 to-orange-50 overflow-hidden">
+        <div className="absolute top-8 left-8 md:top-12 md:left-12 z-10">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+            Join ReadyMealz
           </h1>
-          <p className="text-gray-600 mt-3 text-lg">
-            Fresh Homemade Meals<br />Delivered Daily in Bhopal
+          <p className="text-gray-600 mt-3 text-base md:text-lg">
+            Fresh Homemade Meals
+            <br />
+            Delivered Daily in Bhopal
           </p>
         </div>
 
         <Image
           src={chefImage}
-          alt="Chef Illustration"
+          alt="Chef preparing homemade meal"
           priority
-          className="object-contain w-[80%] h-[80%]"
+          className="object-contain w-4/5 max-w-[420px] lg:max-w-[480px] xl:max-w-[520px]"
+          quality={85}
         />
 
-        <div className="absolute bottom-0 w-72 h-72 bg-orange-200 opacity-20 blur-3xl rounded-full"></div>
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-orange-200 opacity-20 blur-3xl rounded-full" />
       </div>
 
-      {/* RIGHT FORM SECTION */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md bg-white  rounded-3xl p-8 border border-orange-100">
-          <h2 className="text-3xl font-bold text-gray-900 text-center">
+      {/* RIGHT - Form Section */}
+      <div className="flex-1 flex items-center justify-center px-5 py-10 sm:px-8 md:px-12 lg:px-8 lg:py-12">
+        <div className="w-full max-w-md sm:max-w-lg bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 border border-orange-100 shadow-lg">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 text-center">
             Create Account
           </h2>
-          <p className="text-center text-gray-500 text-sm mt-1 mb-6">
-            Start your healthy meal journey 
+          <p className="text-center text-gray-500 text-sm sm:text-base mt-2 mb-6 sm:mb-8">
+            Start your healthy meal journey today
           </p>
 
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4 border">
+            <div className="bg-red-50 text-red-700 text-sm p-3.5 rounded-xl mb-6 border border-red-200">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSignup} className="space-y-4">
-
+          <form onSubmit={handleSignup} className="space-y-4 sm:space-y-5">
             {/* Name */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3"><UserIcon /></span>
               <input
                 type="text"
@@ -143,13 +146,13 @@ export default function SignupPage() {
                 placeholder="Full Name"
                 value={form.name}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400"
                 required
               />
             </div>
 
             {/* Email */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3"><EmailIcon /></span>
               <input
                 type="email"
@@ -157,13 +160,13 @@ export default function SignupPage() {
                 placeholder="Email Address"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400"
                 required
               />
             </div>
 
             {/* Mobile */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3"><PhoneIcon /></span>
               <input
                 type="tel"
@@ -171,13 +174,13 @@ export default function SignupPage() {
                 placeholder="Mobile Number"
                 value={form.mobile}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400"
                 required
               />
             </div>
 
             {/* Password */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3"><LockIcon /></span>
               <input
                 type={showPassword ? "text" : "password"}
@@ -185,16 +188,20 @@ export default function SignupPage() {
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400 flex-1"
                 required
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="ml-2 text-gray-500 hover:text-gray-700"
+              >
                 <EyeIcon />
               </button>
             </div>
 
             {/* Confirm Password */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3"><LockIcon /></span>
               <input
                 type="password"
@@ -202,44 +209,45 @@ export default function SignupPage() {
                 placeholder="Confirm Password"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400"
                 required
               />
             </div>
 
-            {/* Signup Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:scale-[1.01] transition"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3.5 rounded-xl font-semibold text-sm sm:text-base hover:brightness-105 hover:scale-[1.01] transition disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {loading ? "Creating Account..." : "Create Account →"}
             </button>
 
             {/* Divider */}
-            <div className="flex items-center gap-3 my-2">
+            <div className="flex items-center gap-4 my-4 sm:my-6">
               <div className="flex-1 h-px bg-gray-200"></div>
-              <span className="text-xs text-gray-400">OR</span>
+              <span className="text-xs sm:text-sm text-gray-400 font-medium">OR</span>
               <div className="flex-1 h-px bg-gray-200"></div>
             </div>
 
-            {/* Google Button */}
+            {/* Google Button (placeholder – implement real OAuth later) */}
             <button
               type="button"
-              className="w-full border border-gray-200 py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition font-medium"
+              className="w-full border border-gray-200 py-3.5 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition text-sm sm:text-base font-medium disabled:opacity-50"
+              disabled
             >
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="google"
-                className="w-5 h-5"
+                alt="Google"
+                className="w-5 h-5 sm:w-6 sm:h-6"
               />
               Continue with Google
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm sm:text-base text-gray-600 mt-6 sm:mt-8">
             Already have an account?{" "}
-            <Link href="/login" className="text-orange-500 font-semibold">
+            <Link href="/login" className="text-orange-600 font-semibold hover:underline">
               Login
             </Link>
           </p>

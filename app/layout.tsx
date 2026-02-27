@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "./components/Conditionallayout";
+import ReduxProvider from "./redux/Provider";
+import AuthLoader from "./redux/AuthLoader"; //  NEW
+import ToastProvider from './components/ToastProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,11 +23,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ConditionalLayout>{children}</ConditionalLayout>
+        <ReduxProvider>
+          {/* Auto fetch user on app load */}
+          <ToastProvider />
+          <AuthLoader>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </AuthLoader>
+        </ReduxProvider>
       </body>
     </html>
   );

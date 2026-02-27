@@ -1,41 +1,24 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useDispatch } from "react-redux";
+import { setUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
-import chefImage from "../../public/auth-chef.png"; // same image as signup
+import chefImage from "../../public/auth-chef.png";
 
-interface LoginForm {
-  identifier: string;
-  password: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  role: string;
-}
-
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  token?: string;
-  user?: User;
-}
-
-// 🔹 Icons
+// Icons (consistent with signup page)
 const UserIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
 
 const LockIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path d="M12 15v2m-6 4h12a2 2 0 002-2v-5a2 2 0 00-2-2H6a2 2 0 00-2 2v5a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-5a2 2 0 00-2-2H6a2 2 0 00-2 2v5a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
   </svg>
 );
 
@@ -46,25 +29,40 @@ const EyeIcon = () => (
   </svg>
 );
 
-const EyeOffIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path d="M3 3l18 18" />
-    <path d="M10.584 10.587A3 3 0 0013.414 13.417" />
-    <path d="M9.878 5.878A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.132 5.411" />
-  </svg>
-);
+interface LoginForm {
+  identifier: string;
+  password: string;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: string;
+  isActive: boolean;
+  isBlocked: boolean;
+  status: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  user?: User;
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [form, setForm] = useState<LoginForm>({
     identifier: "",
     password: "",
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({
@@ -80,10 +78,16 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const res = await api.post<LoginResponse>("/user/login", {
-        identifier: form.identifier,
-        password: form.password,
-      });
+      const res = await api.post<LoginResponse>(
+        "/user/login",
+        {
+          identifier: form.identifier.trim(),
+          password: form.password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       const data = res.data;
 
@@ -91,20 +95,17 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed");
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        dispatch(setUser(data.user));
+        // Optional: localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      router.push("/"); // redirect to home/dashboard
+      router.push("/");
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
         err?.message ||
-        "Login failed. Please try again."
+        "Login failed. Please check your credentials."
       );
     } finally {
       setLoading(false);
@@ -112,52 +113,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      
-      {/*  LEFT IMAGE SECTION (Same as Signup - Branding Consistency) */}
-      <div className="hidden lg:flex w-1/2 relative items-center justify-center bg-gradient-to-br from-green-50 to-orange-50">
-        
-        <div className="absolute top-12 left-12">
-          <h1 className="text-4xl font-bold text-gray-800 leading-tight">
-            Welcome Back 
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      {/* LEFT - Illustration (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center bg-gradient-to-br from-green-50 to-orange-50 overflow-hidden">
+        <div className="absolute top-8 left-8 md:top-12 md:left-12 z-10">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+            Welcome Back
           </h1>
-          <p className="text-gray-600 mt-3 text-lg">
-            Login to continue your<br />
-            Healthy ReadyMealz Journey 
+          <p className="text-gray-600 mt-3 text-base md:text-lg">
+            Login to continue your
+            <br />
+            Healthy ReadyMealz Journey
           </p>
         </div>
 
         <Image
           src={chefImage}
-          alt="ReadyMealz Login"
+          alt="Chef preparing homemade meal"
           priority
-          className="object-contain w-[80%] h-[80%]"
+          className="object-contain w-4/5 max-w-[420px] lg:max-w-[480px] xl:max-w-[520px]"
+          quality={85}
         />
 
-        <div className="absolute bottom-0 w-72 h-72 bg-orange-200 opacity-20 blur-3xl rounded-full"></div>
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-orange-200 opacity-20 blur-3xl rounded-full" />
       </div>
 
-      {/*  RIGHT LOGIN FORM */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md bg-white  rounded-3xl p-8 border border-orange-100">
-          
-          <h2 className="text-3xl font-bold text-gray-900 text-center">
+      {/* RIGHT - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-5 py-10 sm:px-8 md:px-12 lg:px-8 lg:py-12">
+        <div className="w-full max-w-md sm:max-w-lg bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 border border-orange-100 shadow-lg">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 text-center">
             Login to Account
           </h2>
-          <p className="text-center text-gray-500 text-sm mt-1 mb-6">
-            Use Email or Mobile to login
+
+          <p className="text-center text-gray-500 text-sm sm:text-base mt-2 mb-6 sm:mb-8">
+            Use your Email or Mobile Number
           </p>
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg border">
+            <div className="bg-red-50 text-red-700 text-sm p-3.5 rounded-xl mb-6 border border-red-200 text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            
-            {/* Identifier */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+          <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
+            {/* Identifier (Email or Mobile) */}
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3">
                 <UserIcon />
               </span>
@@ -167,13 +167,14 @@ export default function LoginPage() {
                 placeholder="Email or Mobile Number"
                 value={form.identifier}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400"
                 required
+                autoComplete="username email tel"
               />
             </div>
 
             {/* Password */}
-            <div className="flex items-center border rounded-xl px-4 py-3 focus-within:ring-2 ring-orange-300">
+            <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
               <span className="text-gray-400 mr-3">
                 <LockIcon />
               </span>
@@ -183,52 +184,48 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}
-                className="w-full outline-none text-sm"
+                className="w-full outline-none text-sm sm:text-base placeholder:text-gray-400 flex-1"
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-orange-500"
+                className="ml-2 text-gray-500 hover:text-orange-600 transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                {showPassword ? (
+                  <span className="text-sm font-medium">Hide</span>
+                ) : (
+                  <EyeIcon />
+                )}
               </button>
             </div>
 
-            {/* Login Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:scale-[1.01] transition disabled:opacity-70"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3.5 rounded-xl font-semibold text-sm sm:text-base hover:brightness-105 hover:scale-[1.01] transition disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {loading ? "Logging in..." : "Login →"}
             </button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-200"></div>
-              <span className="text-xs text-gray-400">OR</span>
-              <div className="flex-1 h-px bg-gray-200"></div>
-            </div>
-
-            {/* Google Button UI */}
-            <button
-              type="button"
-              className="w-full border border-gray-200 py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition font-medium"
-            >
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="google"
-                className="w-5 h-5"
-              />
-              Continue with Google
-            </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm sm:text-base text-gray-600 mt-6 sm:mt-8">
             Don’t have an account?{" "}
-            <Link href="/signup" className="text-orange-500 font-semibold">
+            <Link
+              href="/signup"
+              className="text-orange-600 font-semibold hover:underline"
+            >
               Sign Up
+            </Link>
+          </p>
+
+          {/* Optional: Forgot Password link */}
+          <p className="text-center text-sm text-gray-500 mt-4">
+            <Link href="/forgot-password" className="text-orange-500 hover:underline">
+              Forgot Password?
             </Link>
           </p>
         </div>
