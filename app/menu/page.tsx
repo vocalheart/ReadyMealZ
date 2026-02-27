@@ -12,8 +12,7 @@ const menuItems = [
     type: "veg",
     category: "Main Course",
     tags: ["Popular", "High Protein"],
-  },
-  {
+  },{
     id: 2,
     name: "Butter Chicken with Naan",
     description: "Tender chicken in rich tomato-butter gravy with soft butter naan.",
@@ -30,8 +29,7 @@ const menuItems = [
     type: "veg",
     category: "Main Course",
     tags: ["High Protein", "Spicy"],
-  },
-  {
+  },{
     id: 4,
     name: "Chole Bhature",
     description: "Spicy chickpea curry with fluffy fried bread.",
@@ -80,7 +78,6 @@ const menuItems = [
 
 const categories = ["All Items", "Main Course", "Biryani", "Thali", "Breakfast", "Snacks"]
 const allTags = ["Popular", "High Protein", "Bestseller", "Chef Special", "Spicy", "North Indian", "Comfort Food", "Coastal Special"]
-
 const tagColors: Record<string, string> = {
   Popular: "bg-blue-50 text-blue-600",
   "High Protein": "bg-purple-50 text-purple-600",
@@ -90,8 +87,7 @@ const tagColors: Record<string, string> = {
   "North Indian": "bg-orange-50 text-orange-600",
   "Comfort Food": "bg-green-50 text-green-600",
   "Coastal Special": "bg-teal-50 text-teal-600",
-}
-
+};
 const placeholderColors: Record<number, string> = {
   1: "from-amber-200 to-yellow-300",
   2: "from-orange-300 to-red-300",
@@ -101,8 +97,7 @@ const placeholderColors: Record<number, string> = {
   6: "from-green-200 to-emerald-300",
   7: "from-red-300 to-rose-300",
   8: "from-teal-200 to-cyan-300",
-}
-
+};
 // ─── FILTER PANEL (shared between sidebar & drawer) ─────────────────────────
 function FilterPanel({
   selectedCategory,
@@ -149,9 +144,9 @@ function FilterPanel({
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Food Type</p>
         <div className="space-y-1.5">
           {[
-            { value: "all", label: "All" },
-            { value: "veg", label: "Vegetarian" },
-            { value: "non-veg", label: "Non-Vegetarian" },
+            { value:"all", label: "All" },
+            { value:"veg", label: "Vegetarian" },
+            { value:"non-veg", label: "Non-Vegetarian" },
           ].map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
