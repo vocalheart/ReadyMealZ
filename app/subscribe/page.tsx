@@ -13,6 +13,7 @@ type Plan = {
   popular: boolean;
 };
 
+
 type MealTime = "lunch" | "dinner" | "both";
 
 // --- Data ---

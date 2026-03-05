@@ -305,7 +305,8 @@ export default function ProfilePage() {
                 <div className="p-3 text-sm sm:text-base bg-gray-100 border border-gray-300 rounded-xl text-gray-800 font-medium">
                   {user.role || "—"}
                 </div>
-              </div> */}
+              </div> */}         
+
             </div>
 
             {editMode && (
