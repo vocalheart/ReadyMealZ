@@ -13,7 +13,6 @@ type Plan = {
   popular: boolean;
 };
 
-
 type MealTime = "lunch" | "dinner" | "both";
 
 // --- Data ---
@@ -22,6 +21,57 @@ const plans: Plan[] = [
   { id: "7days", label: "7 Days Plan", days: 7, pricePerMeal: 89, total: 623, savings: 70, popular: true },
   { id: "15days", label: "15 Days Plan", days: 15, pricePerMeal: 79, total: 1185, savings: 300, popular: false },
   { id: "30days", label: "30 Days Plan", days: 30, pricePerMeal: 69, total: 2070, savings: 900, popular: false },
+];
+
+const tiffinServices = [
+  {
+    id: 1,
+    name: "North Indian Thali",
+    image: "🥘",
+    description: "Traditional North Indian cuisine with fresh vegetables and authentic recipes",
+    rating: 4.8,
+    reviews: 324,
+  },
+  {
+    id: 2,
+    name: "South Indian Special",
+    image: "🍛",
+    description: "Delicious South Indian meals including dosa, idli, and sambar daily",
+    rating: 4.9,
+    reviews: 412,
+  },
+  {
+    id: 3,
+    name: "Vegan Delight",
+    image: "🥗",
+    description: "100% plant-based meals prepared fresh with organic ingredients",
+    rating: 4.7,
+    reviews: 189,
+  },
+  {
+    id: 4,
+    name: "Fitness Meals",
+    image: "💪",
+    description: "High-protein, low-calorie meals designed for fitness enthusiasts",
+    rating: 4.9,
+    reviews: 276,
+  },
+  {
+    id: 5,
+    name: "Gujarati Cuisine",
+    image: "🥕",
+    description: "Authentic Gujarati recipes with traditional masalas and flavors",
+    rating: 4.6,
+    reviews: 198,
+  },
+  {
+    id: 6,
+    name: "Continental Mix",
+    image: "🍝",
+    description: "International cuisine with Indian touch, pasta, rice & curries",
+    rating: 4.8,
+    reviews: 267,
+  },
 ];
 
 const steps = ["Plan", "Timing", "Start Date", "Address", "Payment"];
@@ -92,6 +142,78 @@ const CodIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
   </svg>
 );
+
+const StarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-yellow-400" viewBox="0 0 24 24">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+  </svg>
+);
+
+const BackIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+);
+
+// --- Landing Page ---
+function LandingPage({ onSelectService }: { onSelectService: (serviceId: number) => void }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+   
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+            Delicious Meals at Your Doorstep
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Choose from our amazing variety of tiffin services and enjoy fresh, homemade meals delivered every day
+          </p>
+        </div>
+
+        {/* Service Cards Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tiffinServices.map((service) => (
+            <div
+              key={service.id}
+              className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 group"
+            >
+              {/* Image Container */}
+              <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-300">
+                {service.image}
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
+                <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+
+                {/* Rating */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <StarIcon key={i} />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">{service.rating}</span>
+                  <span className="text-sm text-gray-500">({service.reviews})</span>
+                </div>
+
+                {/* Subscribe Button */}
+                <button
+                  onClick={() => onSelectService(service.id)}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  Subscribe Now <ArrowRightIcon />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 
 // --- Step Indicator ---
 function StepIndicator({ current }: { current: number }) {
@@ -439,33 +561,80 @@ function StepPayment({
 }
 
 // --- Success Screen ---
-function SuccessScreen({ plan }: { plan: Plan | null }) {
+function SuccessScreen({ plan, onBackHome }: { plan: Plan | null; onBackHome: () => void }) {
   return (
-    <div className="text-center py-16 px-4">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4">
+      <div className="text-center py-16 max-w-md">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Subscription Confirmed!</h2>
+        <p className="text-gray-600 mb-1">Your {plan?.label} has been placed successfully.</p>
+        <p className="text-gray-600 mb-8">Fresh meals will start arriving at your doorstep soon. 🎉</p>
+        <button
+          onClick={onBackHome}
+          className="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition"
+        >
+          Back to Home
+        </button>
       </div>
-      <h2 className="text-3xl font-bold text-gray-900 mb-2">Subscription Confirmed!</h2>
-      <p className="text-gray-500 mb-1">Your {plan?.label} has been placed successfully.</p>
-      <p className="text-gray-500 mb-8">Fresh meals will start arriving at your doorstep soon. 🎉</p>
-      <a href="/" className="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
-        Back to Home
-      </a>
     </div>
   );
 }
 
-// --- Main Page ---
-export default function SubscribePage() {
+// --- Checkout Header ---
+function CheckoutHeader({ onBack }: { onBack: () => void }) {
+  return (
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+        <button
+          onClick={onBack}
+          className="text-gray-600 hover:text-gray-900 transition"
+        >
+          <BackIcon />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+          <p className="text-sm text-gray-500">Complete your subscription</p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// --- Main App ---
+export default function TiffinServiceApp() {
+  const [currentPage, setCurrentPage] = useState<"landing" | "checkout">("landing");
   const [step, setStep] = useState(1);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(plans[0]);
+  const [selectedService, setSelectedService] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(plans[1]); // Default to 7 days
   const [mealTime, setMealTime] = useState<MealTime | null>("lunch");
   const [startDate, setStartDate] = useState("");
   const [address, setAddress] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [submitted, setSubmitted] = useState(false);
+
+  const handleSelectService = (serviceId: number) => {
+    setSelectedService(serviceId);
+    setCurrentPage("checkout");
+    // Reset form
+    setStep(1);
+    setSelectedPlan(plans[1]);
+    setMealTime("lunch");
+    setStartDate("");
+    setAddress({});
+    setPaymentMethod("upi");
+    setSubmitted(false);
+  };
+
+  const handleBackToHome = () => {
+    setCurrentPage("landing");
+    setSelectedService(null);
+    setStep(1);
+    setSubmitted(false);
+  };
 
   const canContinue = () => {
     if (step === 1) return !!selectedPlan;
@@ -481,11 +650,19 @@ export default function SubscribePage() {
     else setSubmitted(true);
   };
 
-  if (submitted) return <div className="min-h-screen bg-gray-50"><SuccessScreen plan={selectedPlan} /></div>;
+  if (currentPage === "landing") {
+    return <LandingPage onSelectService={handleSelectService} />;
+  }
+
+  if (submitted) {
+    return <SuccessScreen plan={selectedPlan} onBackHome={handleBackToHome} />;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <CheckoutHeader onBack={handleBackToHome} />
+
+      <div className="max-w-6xl mx-auto py-8 px-4">
         <StepIndicator current={step} />
 
         <div className="grid lg:grid-cols-3 gap-6 items-start">
