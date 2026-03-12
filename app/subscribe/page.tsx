@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 // --- Types ---
 type Plan = {
@@ -15,63 +16,22 @@ type Plan = {
 
 type MealTime = "lunch" | "dinner" | "both";
 
+type TiffinService = {
+  _id: string;
+  name: string;
+  description: string;
+  image?: {
+    url: string;
+    key: string;
+  };
+};
+
 // --- Data ---
 const plans: Plan[] = [
   { id: "3days", label: "3 Days Plan", days: 3, pricePerMeal: 99, total: 297, savings: null, popular: false },
   { id: "7days", label: "7 Days Plan", days: 7, pricePerMeal: 89, total: 623, savings: 70, popular: true },
   { id: "15days", label: "15 Days Plan", days: 15, pricePerMeal: 79, total: 1185, savings: 300, popular: false },
   { id: "30days", label: "30 Days Plan", days: 30, pricePerMeal: 69, total: 2070, savings: 900, popular: false },
-];
-
-const tiffinServices = [
-  {
-    id: 1,
-    name: "North Indian Thali",
-    image: "🥘",
-    description: "Traditional North Indian cuisine with fresh vegetables and authentic recipes",
-    rating: 4.8,
-    reviews: 324,
-  },
-  {
-    id: 2,
-    name: "South Indian Special",
-    image: "🍛",
-    description: "Delicious South Indian meals including dosa, idli, and sambar daily",
-    rating: 4.9,
-    reviews: 412,
-  },
-  {
-    id: 3,
-    name: "Vegan Delight",
-    image: "🥗",
-    description: "100% plant-based meals prepared fresh with organic ingredients",
-    rating: 4.7,
-    reviews: 189,
-  },
-  {
-    id: 4,
-    name: "Fitness Meals",
-    image: "💪",
-    description: "High-protein, low-calorie meals designed for fitness enthusiasts",
-    rating: 4.9,
-    reviews: 276,
-  },
-  {
-    id: 5,
-    name: "Gujarati Cuisine",
-    image: "🥕",
-    description: "Authentic Gujarati recipes with traditional masalas and flavors",
-    rating: 4.6,
-    reviews: 198,
-  },
-  {
-    id: 6,
-    name: "Continental Mix",
-    image: "🍝",
-    description: "International cuisine with Indian touch, pasta, rice & curries",
-    rating: 4.8,
-    reviews: 267,
-  },
 ];
 
 const steps = ["Plan", "Timing", "Start Date", "Address", "Payment"];
@@ -155,8 +115,14 @@ const BackIcon = () => (
   </svg>
 );
 
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-16">
+    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+  </div>
+);
+
 // --- Landing Page ---
-function LandingPage({ onSelectService }: { onSelectService: (serviceId: number) => void }) {
+function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (serviceId: string) => void; tiffins: TiffinService[]; loading: boolean }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
    
@@ -172,44 +138,60 @@ function LandingPage({ onSelectService }: { onSelectService: (serviceId: number)
         </div>
 
         {/* Service Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tiffinServices.map((service) => (
-            <div
-              key={service.id}
-              className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 group"
-            >
-              {/* Image Container */}
-              <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-300">
-                {service.image}
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
-                <p className="text-gray-600 text-sm mb-4">{service.description}</p>
-
-                {/* Rating */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <StarIcon key={i} />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{service.rating}</span>
-                  <span className="text-sm text-gray-500">({service.reviews})</span>
+        {loading ? (
+          <LoadingSpinner />
+        ) : tiffins.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-400 text-lg">No tiffin services available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tiffins.map((service) => (
+              <div
+                key={service._id}
+                className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 group"
+              >
+                {/* Image Container */}
+                <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden">
+                  {service.image?.url ? (
+                    <img
+                      src={service.image.url}
+                      alt={service.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <span className="text-7xl">🍛</span>
+                  )}
                 </div>
 
-                {/* Subscribe Button */}
-                <button
-                  onClick={() => onSelectService(service.id)}
-                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  Subscribe Now <ArrowRightIcon />
-                </button>
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <StarIcon key={i} />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">4.8</span>
+                    <span className="text-sm text-gray-500">(250+)</span>
+                  </div>
+
+                  {/* Subscribe Button */}
+                  <button
+                    onClick={() => onSelectService(service._id)}
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    Subscribe Now <ArrowRightIcon />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -608,15 +590,35 @@ function CheckoutHeader({ onBack }: { onBack: () => void }) {
 export default function TiffinServiceApp() {
   const [currentPage, setCurrentPage] = useState<"landing" | "checkout">("landing");
   const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState<number | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(plans[1]); // Default to 7 days
   const [mealTime, setMealTime] = useState<MealTime | null>("lunch");
   const [startDate, setStartDate] = useState("");
   const [address, setAddress] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [submitted, setSubmitted] = useState(false);
+  const [tiffins, setTiffins] = useState<TiffinService[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSelectService = (serviceId: number) => {
+  // Fetch tiffins on mount
+  useEffect(() => {
+    const fetchTiffins = async () => {
+      try {
+        const res = await axios.get("/public/tiffins");
+        if (res.data.success) {
+          setTiffins(res.data.tiffins);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tiffins:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTiffins();
+  }, []);
+
+  const handleSelectService = (serviceId: string) => {
     setSelectedService(serviceId);
     setCurrentPage("checkout");
     // Reset form
@@ -651,7 +653,7 @@ export default function TiffinServiceApp() {
   };
 
   if (currentPage === "landing") {
-    return <LandingPage onSelectService={handleSelectService} />;
+    return <LandingPage onSelectService={handleSelectService} tiffins={tiffins} loading={loading} />;
   }
 
   if (submitted) {
