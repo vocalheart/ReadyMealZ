@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../lib/axios";
 
 // --- Types ---
 type Plan = {
@@ -13,9 +13,7 @@ type Plan = {
   savings: number | null;
   popular: boolean;
 };
-
 type MealTime = "lunch" | "dinner" | "both";
-
 type TiffinService = {
   _id: string;
   name: string;
