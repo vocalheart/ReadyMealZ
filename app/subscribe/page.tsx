@@ -13,24 +13,67 @@ type Plan = {
   savings: number | null;
   popular: boolean;
 };
+
 type MealTime = "lunch" | "dinner" | "both";
+
 type TiffinService = {
   _id: string;
   name: string;
   description: string;
+  htmlDescription?: string;
   image?: {
     url: string;
     key: string;
   };
+  gallery?: Array<{
+    url: string;
+    key: string;
+  }>;
+  pricing: {
+    basePrice: number;
+    currency: string;
+    tiers: Array<{
+      name: "daily" | "weekly" | "monthly";
+      price: number;
+      discount: number;
+    }>;
+    bulkDiscount?: {
+      minQuantity: number;
+      discountPercentage: number;
+    };
+  };
+  service: {
+    deliveryDays: string[];
+    deliveryTime: {
+      start: string;
+      end: string;
+    };
+    minDeliveryDistance: number;
+    maxDeliveryDistance: number;
+    isAvailable: boolean;
+    prepareTime: number;
+  };
+  menuItems: Array<{
+    name: string;
+    description: string;
+    category: "veg" | "non-veg" | "vegan" | "jain";
+  }>;
+  dietary: {
+    isVegetarian: boolean;
+    isVegan: boolean;
+    isJain: boolean;
+    allergens: string[];
+    noOfServings: number;
+  };
+  tags: string[];
+  ratings: {
+    average: number;
+    totalReviews: number;
+  };
+  status: "active" | "inactive" | "archived";
+  createdAt: string;
+  updatedAt: string;
 };
-
-// --- Data ---
-const plans: Plan[] = [
-  { id: "3days", label: "3 Days Plan", days: 3, pricePerMeal: 99, total: 297, savings: null, popular: false },
-  { id: "7days", label: "7 Days Plan", days: 7, pricePerMeal: 89, total: 623, savings: 70, popular: true },
-  { id: "15days", label: "15 Days Plan", days: 15, pricePerMeal: 79, total: 1185, savings: 300, popular: false },
-  { id: "30days", label: "30 Days Plan", days: 30, pricePerMeal: 69, total: 2070, savings: 900, popular: false },
-];
 
 const steps = ["Plan", "Timing", "Start Date", "Address", "Payment"];
 
@@ -113,6 +156,13 @@ const BackIcon = () => (
   </svg>
 );
 
+const ClockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center py-16">
     <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
@@ -120,10 +170,20 @@ const LoadingSpinner = () => (
 );
 
 // --- Landing Page ---
-function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (serviceId: string) => void; tiffins: TiffinService[]; loading: boolean }) {
+function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (service: TiffinService) => void; tiffins: TiffinService[]; loading: boolean }) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const filteredTiffins = selectedCategory === "all" 
+    ? tiffins 
+    : tiffins.filter(t => 
+        selectedCategory === "vegetarian" ? t.dietary.isVegetarian :
+        selectedCategory === "vegan" ? t.dietary.isVegan :
+        selectedCategory === "jain" ? t.dietary.isJain :
+        true
+      );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-   
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
@@ -135,22 +195,46 @@ function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (
           </p>
         </div>
 
+        {/* Filters */}
+        {!loading && tiffins.length > 0 && (
+          <div className="flex flex-wrap gap-3 justify-center mb-12">
+            {[
+              { id: "all", label: "All" },
+              { id: "vegetarian", label: "Vegetarian" },
+              { id: "vegan", label: "Vegan" },
+              { id: "jain", label: "Jain" },
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-6 py-2 rounded-full font-medium transition-all ${
+                  selectedCategory === cat.id
+                    ? "bg-orange-500 text-white shadow-lg"
+                    : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Service Cards Grid */}
         {loading ? (
           <LoadingSpinner />
-        ) : tiffins.length === 0 ? (
+        ) : filteredTiffins.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-400 text-lg">No tiffin services available at the moment.</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tiffins.map((service) => (
+            {filteredTiffins.map((service) => (
               <div
                 key={service._id}
                 className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 group"
               >
                 {/* Image Container */}
-                <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center overflow-hidden">
+                <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-100 overflow-hidden">
                   {service.image?.url ? (
                     <img
                       src={service.image.url}
@@ -158,14 +242,32 @@ function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
-                    <span className="text-7xl">🍛</span>
+                    <div className="w-full h-full flex items-center justify-center text-6xl">🍛</div>
                   )}
+                  
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    {service.service.isAvailable ? "Available" : "Unavailable"}
+                  </div>
+
+                  {/* Dietary Tags */}
+                  <div className="absolute bottom-3 left-3 flex gap-1 flex-wrap">
+                    {service.dietary.isVegetarian && (
+                      <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">VEG</span>
+                    )}
+                    {service.dietary.isVegan && (
+                      <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">VEGAN</span>
+                    )}
+                    {service.dietary.isJain && (
+                      <span className="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">JAIN</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{service.description}</p>
 
                   {/* Rating */}
                   <div className="flex items-center gap-2 mb-4">
@@ -174,13 +276,27 @@ function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (
                         <StarIcon key={i} />
                       ))}
                     </div>
-                    <span className="text-sm font-medium text-gray-900">4.8</span>
-                    <span className="text-sm text-gray-500">(250+)</span>
+                    <span className="text-sm font-medium text-gray-900">{service.ratings.average}</span>
+                    <span className="text-sm text-gray-500">({service.ratings.totalReviews}+)</span>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="bg-orange-50 rounded-lg p-3 mb-4">
+                    <div className="text-2xl font-bold text-orange-600">
+                      ₹{service.pricing.basePrice}
+                    </div>
+                    <div className="text-xs text-gray-600">{service.pricing.currency} / {service.dietary.noOfServings} servings</div>
+                  </div>
+
+                  {/* Delivery Info */}
+                  <div className="text-xs text-gray-500 mb-4 flex items-center gap-2">
+                    <ClockIcon />
+                    <span>Prep: {service.service.prepareTime} mins</span>
                   </div>
 
                   {/* Subscribe Button */}
                   <button
-                    onClick={() => onSelectService(service._id)}
+                    onClick={() => onSelectService(service)}
                     className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     Subscribe Now <ArrowRightIcon />
@@ -234,15 +350,17 @@ function StepIndicator({ current }: { current: number }) {
 
 // --- Order Summary ---
 function OrderSummary({
+  service,
   plan,
   mealTime,
   startDate,
 }: {
-  plan: Plan | null;
+  service: TiffinService | null;
+  plan: any | null;
   mealTime: MealTime | null;
   startDate: string;
 }) {
-  if (!plan) return (
+  if (!service || !plan) return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
       <p className="text-gray-400 text-sm">Select a plan to see your order summary.</p>
@@ -251,19 +369,26 @@ function OrderSummary({
 
   const mealMultiplier = mealTime === "both" ? 2 : 1;
   const mealsTotal = plan.days * mealMultiplier;
-  const subtotal = plan.pricePerMeal * mealsTotal;
+  const subtotal = service.pricing.basePrice * mealsTotal;
+  const savings = plan.savings || 0;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-      <div className="space-y-3 text-sm">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">{service.name}</h2>
+      <div className="w-full h-32 rounded-lg overflow-hidden mb-4 bg-gray-100">
+        {service.image?.url && (
+          <img src={service.image.url} alt={service.name} className="w-full h-full object-cover" />
+        )}
+      </div>
+      
+      <div className="space-y-3 text-sm border-b border-gray-200 pb-4 mb-4">
         <div className="flex justify-between text-gray-600">
           <span>Plan</span>
           <span className="font-medium text-gray-900">{plan.days} Days</span>
         </div>
         <div className="flex justify-between text-gray-600">
           <span>Price per meal</span>
-          <span className="font-medium text-gray-900">₹{plan.pricePerMeal}</span>
+          <span className="font-medium text-gray-900">₹{service.pricing.basePrice}</span>
         </div>
         <div className="flex justify-between text-gray-600">
           <span>Total meals</span>
@@ -283,7 +408,7 @@ function OrderSummary({
         )}
       </div>
 
-      <div className="border-t border-gray-100 mt-4 pt-4 space-y-3 text-sm">
+      <div className="space-y-3 text-sm">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
           <span>₹{subtotal}</span>
@@ -292,70 +417,77 @@ function OrderSummary({
           <span>Delivery</span>
           <span className="text-green-600 font-medium">FREE</span>
         </div>
-        {plan.savings && (
+        {savings > 0 && (
           <div className="flex justify-between text-green-600 text-xs">
             <span>Savings</span>
-            <span>-₹{plan.savings}</span>
+            <span>-₹{savings}</span>
           </div>
         )}
       </div>
 
-      <div className="border-t border-gray-100 mt-4 pt-4 flex justify-between items-center">
+      <div className="border-t border-gray-200 mt-4 pt-4 flex justify-between items-center">
         <span className="font-bold text-gray-900">Total</span>
         <span className="text-2xl font-bold text-orange-500">₹{subtotal}</span>
+      </div>
+
+      {/* Delivery Info */}
+      <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
+        <div className="font-semibold mb-2">📦 Delivery Details</div>
+        <div>Days: {service.service.deliveryDays.join(", ")}</div>
+        <div>Time: {service.service.deliveryTime.start} - {service.service.deliveryTime.end}</div>
+        <div>Distance: {service.service.minDeliveryDistance}-{service.service.maxDeliveryDistance} km</div>
       </div>
     </div>
   );
 }
 
 // --- Step 1: Select Plan ---
-function StepPlan({ selected, onSelect }: { selected: Plan | null; onSelect: (p: Plan) => void }) {
+function StepPlan({ service, onSelect }: { service: TiffinService; onSelect: (p: any) => void }) {
+  const dynamicPlans = [
+    { id: "3days", label: "3 Days Plan", days: 3, savings: null, popular: false },
+    { id: "7days", label: "7 Days Plan", days: 7, savings: Math.floor(service.pricing.basePrice * 3.5), popular: true },
+    { id: "15days", label: "15 Days Plan", days: 15, savings: Math.floor(service.pricing.basePrice * 15), popular: false },
+    { id: "30days", label: "30 Days Plan", days: 30, savings: Math.floor(service.pricing.basePrice * 60), popular: false },
+  ].map(p => ({
+    ...p,
+    pricePerMeal: service.pricing.basePrice,
+    total: service.pricing.basePrice * p.days,
+  }));
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Your Plan</h2>
       <div className="space-y-3">
-        {plans.map((plan) => {
-          const isSelected = selected?.id === plan.id;
-          return (
-            <button
-              key={plan.id}
-              onClick={() => onSelect(plan)}
-              className={`w-full text-left rounded-xl px-5 py-4 border-2 flex items-center gap-4 transition-all ${
-                isSelected
-                  ? "bg-orange-500 border-orange-500 text-white"
-                  : "bg-white border-gray-200 hover:border-orange-300"
-              }`}
-            >
-              {/* Radio */}
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                isSelected ? "border-white" : "border-gray-400"
-              }`}>
-                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-              </div>
+        {dynamicPlans.map((plan) => (
+          <button
+            key={plan.id}
+            onClick={() => onSelect(plan)}
+            className="w-full text-left rounded-xl px-5 py-4 border-2 flex items-center gap-4 transition-all hover:border-orange-300 bg-white border-gray-200"
+          >
+            <div className="w-5 h-5 rounded-full border-2 border-gray-400 flex-shrink-0" />
 
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className={`font-semibold text-base ${isSelected ? "text-white" : "text-gray-900"}`}>
-                    {plan.label}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-base text-gray-900">
+                  {plan.label}
+                </span>
+                {plan.popular && (
+                  <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    Popular
                   </span>
-                  {plan.popular && (
-                    <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-                      Popular
-                    </span>
-                  )}
-                </div>
-                <div className={`text-sm mt-0.5 flex items-center gap-2 ${isSelected ? "text-orange-100" : "text-gray-500"}`}>
-                  <span>₹{plan.pricePerMeal}/meal · Total: ₹{plan.total}</span>
-                  {plan.savings && (
-                    <span className={`font-medium ${isSelected ? "text-white" : "text-green-600"}`}>
-                      Save ₹{plan.savings}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
-            </button>
-          );
-        })}
+              <div className="text-sm mt-0.5 flex items-center gap-2 text-gray-500">
+                <span>₹{plan.pricePerMeal}/meal · Total: ₹{plan.total}</span>
+                {plan.savings && (
+                  <span className="text-green-600 font-medium">
+                    Save ₹{plan.savings}
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -403,8 +535,15 @@ function StepTiming({ selected, onSelect }: { selected: MealTime | null; onSelec
 }
 
 // --- Step 3: Start Date ---
-function StepStartDate({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function StepStartDate({ service, value, onChange }: { service: TiffinService; value: string; onChange: (v: string) => void }) {
   const today = new Date().toISOString().split("T")[0];
+  
+  // Only allow delivery days
+  const allowedDates = (dateString: string) => {
+    const date = new Date(dateString);
+    const dayName = date.toLocaleString("en-US", { weekday: "long" });
+    return service.service.deliveryDays.includes(dayName);
+  };
 
   return (
     <div>
@@ -422,9 +561,18 @@ function StepStartDate({ value, onChange }: { value: string; onChange: (v: strin
           className="w-full border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
         />
         {value && (
-          <p className="mt-3 text-sm text-green-600 font-medium">
-            ✓ Your subscription starts on {new Date(value).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
+          <div>
+            <p className={`mt-3 text-sm font-medium ${
+              allowedDates(value) ? "text-green-600" : "text-red-600"
+            }`}>
+              {allowedDates(value) ? "✓" : "✗"} {new Date(value).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </p>
+            {!allowedDates(value) && (
+              <p className="text-xs text-red-600 mt-2">
+                Delivery only available on: {service.service.deliveryDays.join(", ")}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -541,7 +689,7 @@ function StepPayment({
 }
 
 // --- Success Screen ---
-function SuccessScreen({ plan, onBackHome }: { plan: Plan | null; onBackHome: () => void }) {
+function SuccessScreen({ service, plan, onBackHome }: { service: TiffinService; plan: any | null; onBackHome: () => void }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4">
       <div className="text-center py-16 max-w-md">
@@ -551,7 +699,7 @@ function SuccessScreen({ plan, onBackHome }: { plan: Plan | null; onBackHome: ()
           </svg>
         </div>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Subscription Confirmed!</h2>
-        <p className="text-gray-600 mb-1">Your {plan?.label} has been placed successfully.</p>
+        <p className="text-gray-600 mb-1">Your {plan?.days} days {service.name} subscription has been placed successfully.</p>
         <p className="text-gray-600 mb-8">Fresh meals will start arriving at your doorstep soon. 🎉</p>
         <button
           onClick={onBackHome}
@@ -565,7 +713,7 @@ function SuccessScreen({ plan, onBackHome }: { plan: Plan | null; onBackHome: ()
 }
 
 // --- Checkout Header ---
-function CheckoutHeader({ onBack }: { onBack: () => void }) {
+function CheckoutHeader({ service, onBack }: { service: TiffinService | null; onBack: () => void }) {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
@@ -577,7 +725,7 @@ function CheckoutHeader({ onBack }: { onBack: () => void }) {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-sm text-gray-500">Complete your subscription</p>
+          <p className="text-sm text-gray-500">{service?.name || "Complete your subscription"}</p>
         </div>
       </div>
     </header>
@@ -588,8 +736,8 @@ function CheckoutHeader({ onBack }: { onBack: () => void }) {
 export default function TiffinServiceApp() {
   const [currentPage, setCurrentPage] = useState<"landing" | "checkout">("landing");
   const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(plans[1]); // Default to 7 days
+  const [selectedService, setSelectedService] = useState<TiffinService | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [mealTime, setMealTime] = useState<MealTime | null>("lunch");
   const [startDate, setStartDate] = useState("");
   const [address, setAddress] = useState<Record<string, string>>({});
@@ -604,7 +752,7 @@ export default function TiffinServiceApp() {
       try {
         const res = await axios.get("/public/tiffins");
         if (res.data.success) {
-          setTiffins(res.data.tiffins);
+          setTiffins(res.data.data || []);
         }
       } catch (error) {
         console.error("Failed to fetch tiffins:", error);
@@ -616,12 +764,12 @@ export default function TiffinServiceApp() {
     fetchTiffins();
   }, []);
 
-  const handleSelectService = (serviceId: string) => {
-    setSelectedService(serviceId);
+  const handleSelectService = (service: TiffinService) => {
+    setSelectedService(service);
     setCurrentPage("checkout");
     // Reset form
     setStep(1);
-    setSelectedPlan(plans[1]);
+    setSelectedPlan(null);
     setMealTime("lunch");
     setStartDate("");
     setAddress({});
@@ -639,7 +787,10 @@ export default function TiffinServiceApp() {
   const canContinue = () => {
     if (step === 1) return !!selectedPlan;
     if (step === 2) return !!mealTime;
-    if (step === 3) return !!startDate;
+    if (step === 3) return !!startDate && (selectedService ? 
+      new Date(startDate).toLocaleString("en-US", { weekday: "long" }) && 
+      selectedService.service.deliveryDays.includes(new Date(startDate).toLocaleString("en-US", { weekday: "long" })) 
+      : false);
     if (step === 4) return !!(address.name && address.phone && address.flat && address.area && address.pincode);
     if (step === 5) return !!paymentMethod;
     return true;
@@ -655,12 +806,12 @@ export default function TiffinServiceApp() {
   }
 
   if (submitted) {
-    return <SuccessScreen plan={selectedPlan} onBackHome={handleBackToHome} />;
+    return <SuccessScreen service={selectedService!} plan={selectedPlan} onBackHome={handleBackToHome} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <CheckoutHeader onBack={handleBackToHome} />
+      <CheckoutHeader service={selectedService} onBack={handleBackToHome} />
 
       <div className="max-w-6xl mx-auto py-8 px-4">
         <StepIndicator current={step} />
@@ -668,9 +819,9 @@ export default function TiffinServiceApp() {
         <div className="grid lg:grid-cols-3 gap-6 items-start">
           {/* Main Card */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-            {step === 1 && <StepPlan selected={selectedPlan} onSelect={setSelectedPlan} />}
+            {step === 1 && selectedService && <StepPlan service={selectedService} onSelect={setSelectedPlan} />}
             {step === 2 && <StepTiming selected={mealTime} onSelect={setMealTime} />}
-            {step === 3 && <StepStartDate value={startDate} onChange={setStartDate} />}
+            {step === 3 && selectedService && <StepStartDate service={selectedService} value={startDate} onChange={setStartDate} />}
             {step === 4 && <StepAddress address={address} onChange={(k, v) => setAddress((p) => ({ ...p, [k]: v }))} />}
             {step === 5 && <StepPayment selected={paymentMethod} onSelect={setPaymentMethod} />}
 
@@ -700,7 +851,14 @@ export default function TiffinServiceApp() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <OrderSummary plan={selectedPlan} mealTime={mealTime} startDate={startDate} />
+            {selectedService && (
+              <OrderSummary 
+                service={selectedService} 
+                plan={selectedPlan} 
+                mealTime={mealTime} 
+                startDate={startDate} 
+              />
+            )}
           </div>
         </div>
       </div>
