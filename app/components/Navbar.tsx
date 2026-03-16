@@ -16,6 +16,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
+import { useCart } from "../hooks/useCart"; // ADD THIS
 
 function Navbar() {
   const [open, setOpen] = useState(false); // mobile menu
@@ -26,12 +27,16 @@ function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, loading } = useSelector((state: RootState) => state.auth);
+  const { itemCount } = useCart(); // ADD THIS - Get cart count from Redux
   const isLoggedIn = !!user;
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
@@ -132,12 +137,14 @@ function Navbar() {
               <span className="max-w-[140px] truncate">{city}</span>
             </div>
 
-            {/* Cart */}
+            {/* Cart - UPDATED */}
             <Link href="/cart" className="relative p-1.5 transition hover:text-orange-600">
               <FiShoppingCart className="h-6 w-6" />
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white ring-2 ring-white">
-                2
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white ring-2 ring-white">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </Link>
 
             {/* User Dropdown / Auth */}
@@ -213,11 +220,14 @@ function Navbar() {
               <span className="max-w-[90px] truncate font-medium">{city}</span>
             </div>
 
+            {/* Mobile Cart - UPDATED */}
             <Link href="/cart" className="relative p-1">
               <FiShoppingCart className="h-6 w-6 text-gray-700" />
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white">
-                2
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </Link>
 
             <button
@@ -231,6 +241,7 @@ function Navbar() {
           </div>
         </div>
       </div>
+
       {/* Mobile Menu */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
@@ -249,7 +260,9 @@ function Navbar() {
               href={item.href}
               onClick={() => setOpen(false)}
               className={`text-lg transition ${
-                pathname === item.href ? "text-orange-600 font-semibold" : "hover:text-orange-600"
+                pathname === item.href
+                  ? "text-orange-600 font-semibold"
+                  : "hover:text-orange-600"
               }`}
             >
               {item.label}
@@ -269,7 +282,7 @@ function Navbar() {
             className="flex items-center gap-3 text-lg"
           >
             <FiShoppingCart className="h-5 w-5" />
-            <span>Cart</span>
+            <span>Cart {itemCount > 0 && `(${itemCount})`}</span>
           </Link>
 
           {isLoggedIn ? (

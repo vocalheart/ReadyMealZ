@@ -95,7 +95,6 @@ const ArrowLeftIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
   </svg>
 );
-
 const SunIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
@@ -187,7 +186,7 @@ function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-4">
             Delicious Meals at Your Doorstep
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -236,15 +235,10 @@ function LandingPage({ onSelectService, tiffins, loading }: { onSelectService: (
                 {/* Image Container */}
                 <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-100 overflow-hidden">
                   {service.image?.url ? (
-                    <img
-                      src={service.image.url}
-                      alt={service.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
+                    <img src={service.image.url} alt={service.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"/>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-6xl">🍛</div>
-                  )}
-                  
+                  )};
                   {/* Status Badge */}
                   <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                     {service.service.isAvailable ? "Available" : "Unavailable"}
@@ -468,9 +462,7 @@ function StepPlan({ service, onSelect }: { service: TiffinService; onSelect: (p:
 
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-base text-gray-900">
-                  {plan.label}
-                </span>
+                <span className="font-semibold text-base text-gray-900"> {plan.label}</span>
                 {plan.popular && (
                   <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-2 py-0.5 rounded-full">
                     Popular
@@ -595,7 +587,6 @@ function StepAddress({
     { key: "landmark", label: "Landmark (optional)", placeholder: "Near City Mall", type: "text" },
     { key: "pincode", label: "Pincode", placeholder: "462016", type: "text" },
   ];
-
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Delivery Address</h2>
@@ -841,14 +832,13 @@ export default function TiffinServiceApp() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-white transition ${
                   canContinue()
                     ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-orange-300 cursor-not-allowed"
+                    : "bg-orange-300  cursor-not-allowed"
                 }`}
               >
                 {step === 5 ? "Place Order" : "Continue"} <ArrowRightIcon />
               </button>
             </div>
           </div>
-
           {/* Order Summary */}
           <div className="lg:col-span-1">
             {selectedService && (
