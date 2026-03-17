@@ -142,7 +142,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        console.log("📋 Fetching orders...");
+        console.log(" Fetching orders...");
 
         const params = new URLSearchParams({
           page: pagination.page.toString(),
@@ -160,7 +160,7 @@ export default function OrdersPage() {
           }
         );
 
-        console.log("✅ Orders fetched:", response.data);
+        console.log(" Orders fetched:", response.data);
 
         if (response.data.success) {
           setOrders(response.data.data.orders);
@@ -291,12 +291,12 @@ export default function OrdersPage() {
               onChange={(e) => handleStatusFilter(e.target.value)}
               className="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border border-gray-300 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 transition bg-white"
             >
-              <option value="">📋 All Status</option>
-              <option value="placed">📦 Placed</option>
+              <option value=""> All Status</option>
+              <option value="placed"> Placed</option>
               <option value="confirmed">✓ Confirmed</option>
-              <option value="preparing">🔪 Preparing</option>
-              <option value="ready">📦 Ready</option>
-              <option value="out_for_delivery">🚚 Out for Delivery</option>
+              <option value="preparing"> Preparing</option>
+              <option value="ready"> Ready</option>
+              <option value="out_for_delivery"> Out for Delivery</option>
               <option value="delivered">✓ Delivered</option>
               <option value="cancelled">✗ Cancelled</option>
             </select>
@@ -394,11 +394,11 @@ export default function OrdersPage() {
                             <AlertCircle className="w-4 h-4 text-red-600" />
                           )}
                           <p className="text-xs text-gray-600 font-medium">
-                            {order.orderStatus === "placed" && "📦 Just placed"}
+                            {order.orderStatus === "placed" && " Just placed"}
                             {order.orderStatus === "confirmed" && "✓ Being prepared"}
-                            {order.orderStatus === "preparing" && "🔪 Cooking your meal"}
-                            {order.orderStatus === "ready" && "📦 Ready for pickup"}
-                            {order.orderStatus === "out_for_delivery" && "🚚 On the way"}
+                            {order.orderStatus === "preparing" && " Cooking your meal"}
+                            {order.orderStatus === "ready" && " Ready for pickup"}
+                            {order.orderStatus === "out_for_delivery" && " On the way"}
                             {order.orderStatus === "delivered" && "✓ Delivered"}
                             {order.orderStatus === "cancelled" && "Cancelled"}
                           </p>

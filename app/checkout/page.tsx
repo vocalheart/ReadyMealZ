@@ -82,17 +82,17 @@ export default function CheckoutPage() {
     console.log("📦 Fetching cart...");
     dispatch(fetchCart() as any)
       .then((result: any) => {
-        console.log("✅ Cart fetched, result:", result);
+        console.log(" Cart fetched, result:", result);
       })
       .catch((err: any) => {
-        console.error("❌ Cart fetch error:", err);
+        console.error(" Cart fetch error:", err);
       });
   }, [dispatch]);
 
   // Redirect if no items
   useEffect(() => {
     if (!cartLoading && cart && cart.items.length === 0 && !orderSuccess) {
-      console.log("❌ No items in cart, redirecting...");
+      console.log(" No items in cart, redirecting...");
       router.push("/cart");
     }
   }, [cartLoading, cart, router, orderSuccess]);
