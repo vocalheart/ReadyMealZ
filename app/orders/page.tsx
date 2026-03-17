@@ -2,20 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ShoppingBag,
-  ArrowRight,
-  Loader,
-  AlertCircle,
-  Calendar,
-  Package,
-  CheckCircle,
-  Truck,
-  Search,
-  Clock,
-  MapPin,
-  CreditCard,
-} from "lucide-react";
+import {ShoppingBag,ArrowRight,Loader,AlertCircle,Calendar,Package,CheckCircle,Truck,Search,Clock,MapPin,CreditCard} from "lucide-react";
 import api from "../lib/axios";
 
 interface OrderItem {
@@ -170,7 +157,7 @@ export default function OrdersPage() {
           setError(response.data.data?.message || "Failed to fetch orders");
         }
       } catch (err: any) {
-        console.error("❌ Error fetching orders:", err);
+        console.error("Error fetching orders:", err);
         setError(
           err.response?.data?.message ||
             err.message ||
