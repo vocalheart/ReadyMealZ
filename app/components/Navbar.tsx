@@ -30,6 +30,7 @@ import logo from '../../public/logoreadymealz.jpeg';
  * - Cart & Orders visible only when logged in
  * - Mobile drawer full viewport height
  */
+
 function Navbar() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -142,7 +143,7 @@ function Navbar() {
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
-              <Image src={logo} width={100} alt="A1Meals Logo" priority />
+              <Image src={logo} width={60} alt="A1Meals Logo" priority />
             </Link>
 
             {/* Desktop Navigation */}
