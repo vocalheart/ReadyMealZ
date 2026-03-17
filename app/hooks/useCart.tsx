@@ -1,13 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import {
-  fetchCart,
-  addToCart,
-  updateCartItem,
-  removeFromCart,
-  clearCart,
-  clearError,
-} from "../redux/slices/Cartslice";
+import { fetchCart, addToCart, updateCartItem, removeFromCart, clearCart, clearError } from "../redux/slices/Cartslice";
 
 /**
  * Custom hook for cart operations

@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Search,
-  SlidersHorizontal,
-  X,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Clock,
-  Flame,
-} from "lucide-react";
+import {Search,SlidersHorizontal,X,Plus, ChevronLeft, ChevronRight, Star,Clock,Flame } from "lucide-react";
 import api from "../lib/axios";
 import { MealCard } from "../components/MealCard"; // Import the fixed component
 
@@ -198,11 +188,7 @@ function FilterPanel({
           <div className="space-y-1.5">
             {allTags.map((tag) => (
               <label key={tag._id} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedTags.includes(tag._id)}
-                  onChange={() => toggleTag(tag._id)}
-                  className="accent-orange-500 w-3.5 h-3.5 rounded"
+                <input  type="checkbox"  checked={selectedTags.includes(tag._id)} onChange={() => toggleTag(tag._id)}className="accent-orange-500 w-3.5 h-3.5 rounded"
                 />
                 <span className="text-sm text-gray-600">{tag.name}</span>
               </label>

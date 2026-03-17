@@ -60,7 +60,6 @@ export default function CartPage() {
             {itemCount} {itemCount === 1 ? "item" : "items"} in your cart
           </p>
         </div>
-
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
@@ -204,10 +203,11 @@ export default function CartPage() {
                 </div>
 
                 {/* CTA Buttons */}
-                <button className="w-full bg-orange-500 text-white font-semibold py-3 rounded-xl hover:bg-orange-600 transition mb-3">
-                  Proceed to Checkout
-                </button>
-
+                <Link href="/checkout">
+                  <button className="w-full bg-orange-500 text-white font-semibold py-3 rounded-xl hover:bg-orange-600 transition mb-3">
+                    Proceed to Checkout
+                  </button>
+                </Link>
                 <button
                   onClick={clearCart}
                   className="w-full border border-gray-200 text-gray-700 font-medium py-2.5 rounded-xl hover:bg-gray-50 transition"
