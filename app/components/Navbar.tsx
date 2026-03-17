@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FiMenu,
   FiX,
@@ -11,23 +11,35 @@ import {
   FiUser,
   FiLogOut,
   FiChevronDown,
+  FiPackage,
+  FiHome,
 } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
-import { useCart } from "../hooks/useCart"; // ADD THIS
+import { useCart } from "../hooks/useCart";
 
+/**
+ * Enhanced Navbar Component
+ * - Mobile drawer menu from right side
+ * - Orders link with badge
+ * - Real-time cart counter (no click needed)
+ * - Modern UI/UX improvements
+ */
 function Navbar() {
-  const [open, setOpen] = useState(false); // mobile menu
-  const [dropdownOpen, setDropdownOpen] = useState(false); // user dropdown
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [city, setCity] = useState("Detecting...");
+  const [isScrolled, setIsScrolled] = useState(false);
+  
   const dispatch = useDispatch();
   const pathname = usePathname();
+  const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, loading } = useSelector((state: RootState) => state.auth);
-  const { itemCount } = useCart(); // ADD THIS - Get cart count from Redux
+  const { itemCount } = useCart(); // Real-time cart count
   const isLoggedIn = !!user;
 
   // Close dropdown when clicking outside
@@ -42,6 +54,15 @@ function Navbar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Location detection
@@ -86,240 +107,337 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       await api.post("/user/logout", {}, { withCredentials: true });
-    } catch {}
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     dispatch(logoutUser());
+    setMobileMenuOpen(false);
+    setDropdownOpen(false);
     window.location.href = "/login";
   };
+
+  const handleNavClick = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const navItems = [
+    { href: "/menu", label: "Menu", icon: FiHome },
+    { href: "/orders", label: "Orders", icon: FiPackage },
+    { href: "/subscribe", label: "Subscribe", icon: null },
+    { href: "/bulk-order", label: "Bulk Order", icon: null },
+    { href: "/features", label: "Features", icon: null },
+  ];
 
   if (loading) return null;
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white text-xl font-bold shadow-sm">
-              🍱
-            </div>
-            <span className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
-              ReadyMealz
-            </span>
-          </Link>
+    <>
+      {/* Main Navbar */}
+      <nav
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          isScrolled
+            ? "bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md"
+            : "bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm"
+        }`}
+      >
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-4">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white text-lg font-bold shadow-md hover:shadow-lg transition">
+                🍱
+              </div>
+              <span className="hidden sm:block text-lg sm:text-xl font-bold tracking-tight text-gray-900">
+                ReadyMealz
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:gap-8 lg:gap-10">
-            {[
-              { href: "/menu", label: "Menu" },
-              { href: "/subscribe", label: "Subscribe" },
-              { href: "/bulk-order", label: "Bulk Order" },
-              { href: "/features", label: "Features" },
-            ].map((item) => (
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`font-medium transition-colors duration-200 text-sm ${
+                    pathname === item.href
+                      ? "text-orange-600 font-semibold"
+                      : "text-gray-700 hover:text-orange-600"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop Right Section */}
+            <div className="hidden md:flex items-center gap-4 lg:gap-6">
+              {/* Location Badge */}
+              <div className="flex items-center gap-2 rounded-full bg-gray-50 hover:bg-gray-100 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 border border-gray-200 transition">
+                <FiMapPin className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                <span className="max-w-[100px] sm:max-w-[140px] truncate">
+                  {city}
+                </span>
+              </div>
+
+              {/* Cart Icon with Badge */}
+              <Link
+                href="/cart"
+                className="relative p-2 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition duration-200"
+              >
+                <FiShoppingCart className="h-6 w-6" />
+                {itemCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-[10px] font-bold text-white ring-2 ring-white shadow-lg">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* User Dropdown / Auth */}
+              {isLoggedIn ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-1.5 hover:bg-gray-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    aria-expanded={dropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                      {user?.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                    <span className="font-medium text-gray-800 hidden lg:inline text-sm">
+                      {user?.name?.split(" ")[0] || "Account"}
+                    </span>
+                    <FiChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                        dropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black/10 focus:outline-none z-50 border border-gray-100 overflow-hidden">
+                      {/* User Info */}
+                      <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-transparent">
+                        <p className="text-xs text-gray-500">Logged in as</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {user?.email || user?.mobile}
+                        </p>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        <Link
+                          href="/account"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-150"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <FiUser className="h-5 w-5" />
+                          <span>My Account</span>
+                        </Link>
+
+                        <Link
+                          href="/orders"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-150"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <FiPackage className="h-5 w-5" />
+                          <span>My Orders</span>
+                        </Link>
+
+                        <div className="my-2 border-t border-gray-100" />
+
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition duration-150"
+                        >
+                          <FiLogOut className="h-5 w-5" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="rounded-lg border border-orange-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-orange-600 hover:bg-orange-50 transition duration-200"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-xs sm:text-sm font-medium text-white shadow-md hover:shadow-lg hover:from-orange-600 hover:to-orange-700 transition duration-200"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Right Icons */}
+            <div className="flex md:hidden items-center gap-3">
+              {/* Location Badge - Mobile */}
+              <div className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+                <FiMapPin className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
+                <span className="max-w-[70px] truncate font-medium">{city}</span>
+              </div>
+
+              {/* Mobile Cart Icon */}
+              <Link
+                href="/cart"
+                className="relative p-2 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
+              >
+                <FiShoppingCart className="h-6 w-6" />
+                {itemCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-[10px] font-bold text-white ring-2 ring-white">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Mobile Menu Toggle */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition focus:outline-none"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              >
+                {mobileMenuOpen ? (
+                  <FiX className="h-6 w-6" />
+                ) : (
+                  <FiMenu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Drawer - RIGHT SIDE */}
+      <div
+        className={`fixed inset-y-16 right-0 z-50 w-80 bg-white shadow-2xl border-l border-gray-200 overflow-y-auto transition-transform duration-300 ease-out md:hidden ${
+          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200 p-6">
+          <h2 className="text-lg font-bold text-gray-900">Menu</h2>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="px-4 py-6 space-y-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`font-medium transition-colors ${
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
                   pathname === item.href
-                    ? "text-orange-600 font-semibold"
-                    : "text-gray-700 hover:text-orange-600"
+                    ? "bg-orange-100 text-orange-700"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                {item.label}
+                {Icon && <Icon className="h-5 w-5" />}
+                <span>{item.label}</span>
               </Link>
-            ))}
-          </div>
-
-          {/* Desktop Right Section */}
-          <div className="hidden md:flex md:items-center md:gap-6">
-            {/* Location */}
-            <div className="flex items-center gap-2 rounded-full bg-gray-50 px-3.5 py-1.5 text-sm font-medium text-gray-700 border border-gray-200">
-              <FiMapPin className="h-4 w-4 text-orange-500" />
-              <span className="max-w-[140px] truncate">{city}</span>
-            </div>
-
-            {/* Cart - UPDATED */}
-            <Link href="/cart" className="relative p-1.5 transition hover:text-orange-600">
-              <FiShoppingCart className="h-6 w-6" />
-              {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white ring-2 ring-white">
-                  {itemCount > 99 ? "99+" : itemCount}
-                </span>
-              )}
-            </Link>
-
-            {/* User Dropdown / Auth */}
-            {isLoggedIn ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 rounded-full px-2 py-1.5 hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-orange-300"
-                  aria-expanded={dropdownOpen}
-                  aria-haspopup="true"
-                >
-                  <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-medium">
-                    {user?.name?.charAt(0)?.toUpperCase() || "?"}
-                  </div>
-                  <span className="font-medium text-gray-800 hidden lg:inline">
-                    {user?.name?.split(" ")[0] || "Account"}
-                  </span>
-                  <FiChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {/* Dropdown Menu */}
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-50 border border-gray-100">
-                    <div className="py-1">
-                      <Link
-                        href="/account"
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <FiUser className="h-5 w-5" />
-                        My Account
-                      </Link>
-
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setDropdownOpen(false);
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition"
-                      >
-                        <FiLogOut className="h-5 w-5" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="rounded-lg border border-orange-500 px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 transition"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-orange-700 transition"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Right Icons */}
-          <div className="flex items-center gap-4 md:hidden">
-            <div className="flex items-center gap-1 text-xs text-gray-600">
-              <FiMapPin className="h-4 w-4 text-orange-500" />
-              <span className="max-w-[90px] truncate font-medium">{city}</span>
-            </div>
-
-            {/* Mobile Cart - UPDATED */}
-            <Link href="/cart" className="relative p-1">
-              <FiShoppingCart className="h-6 w-6 text-gray-700" />
-              {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white">
-                  {itemCount > 99 ? "99+" : itemCount}
-                </span>
-              )}
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => setOpen(!open)}
-              className="p-1 text-gray-700 focus:outline-none"
-              aria-label={open ? "Close menu" : "Open menu"}
-            >
-              {open ? <FiX size={28} /> : <FiMenu size={28} />}
-            </button>
-          </div>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-screen py-6 opacity-100" : "max-h-0 py-0 opacity-0"
-        } bg-white border-t border-gray-100 shadow-md`}
-      >
-        <div className="mx-auto max-w-md px-6 flex flex-col items-center gap-6 text-gray-800 font-medium">
-          {[
-            { href: "/menu", label: "Menu" },
-            { href: "/subscribe", label: "Subscribe" },
-            { href: "/bulk-order", label: "Bulk Order" },
-            { href: "/features", label: "Features" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={`text-lg transition ${
-                pathname === item.href
-                  ? "text-orange-600 font-semibold"
-                  : "hover:text-orange-600"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <div className="mx-4 border-t border-gray-200" />
 
-          <div className="w-full h-px bg-gray-200 my-2" />
-
-          <div className="flex items-center gap-2 text-gray-700">
-            <FiMapPin className="h-5 w-5 text-orange-500" />
-            <span className="font-medium">{city}</span>
-          </div>
-
+        {/* Cart Link */}
+        <div className="px-4 py-4">
           <Link
             href="/cart"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 text-lg"
+            onClick={handleNavClick}
+            className="flex items-center justify-between px-4 py-3 rounded-lg bg-orange-50 text-orange-700 font-medium hover:bg-orange-100 transition"
           >
-            <FiShoppingCart className="h-5 w-5" />
-            <span>Cart {itemCount > 0 && `(${itemCount})`}</span>
+            <span className="flex items-center gap-3">
+              <FiShoppingCart className="h-5 w-5" />
+              <span>Shopping Cart</span>
+            </span>
+            {itemCount > 0 && (
+              <span className="bg-orange-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                {itemCount > 99 ? "99+" : itemCount}
+              </span>
+            )}
           </Link>
+        </div>
 
+        {/* Auth Section */}
+        <div className="border-t border-gray-200 p-4 mt-4">
           {isLoggedIn ? (
-            <div className="flex flex-col items-center gap-4 w-full pt-2">
+            <div className="space-y-3">
+              {/* User Info Card */}
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                    {user?.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {user?.email || user?.mobile}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Links */}
               <Link
                 href="/account"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 text-lg"
+                onClick={handleNavClick}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
               >
                 <FiUser className="h-5 w-5" />
-                <span>{user?.name || "My Account"}</span>
+                <span>My Account</span>
               </Link>
 
+              <Link
+                href="/orders"
+                onClick={handleNavClick}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
+              >
+                <FiPackage className="h-5 w-5" />
+                <span>My Orders</span>
+              </Link>
+
+              {/* Logout Button */}
               <button
                 onClick={() => {
                   handleLogout();
-                  setOpen(false);
                 }}
-                className="flex items-center gap-2 text-lg text-red-600"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-600 font-medium hover:bg-red-100 transition"
               >
                 <FiLogOut className="h-5 w-5" />
                 <span>Logout</span>
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 w-full pt-2">
+            <div className="space-y-3">
               <Link
                 href="/login"
-                onClick={() => setOpen(false)}
-                className="w-full rounded-lg border border-orange-500 py-3 text-center font-medium text-orange-600 hover:bg-orange-50 transition"
+                onClick={handleNavClick}
+                className="block w-full rounded-lg border-2 border-orange-500 py-3 text-center font-medium text-orange-600 hover:bg-orange-50 transition"
               >
                 Log In
               </Link>
               <Link
                 href="/signup"
-                onClick={() => setOpen(false)}
-                className="w-full rounded-lg bg-orange-600 py-3 text-center font-medium text-white hover:bg-orange-700 transition"
+                onClick={handleNavClick}
+                className="block w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 py-3 text-center font-medium text-white hover:shadow-lg transition"
               >
                 Create Account
               </Link>
@@ -327,7 +445,15 @@ function Navbar() {
           )}
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
