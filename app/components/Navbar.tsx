@@ -22,7 +22,7 @@ import { logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
 import { useCart } from "../hooks/useCart";
 import Image from "next/image";
-import logo from '../../public/logoreadymealz';
+import logo from '../../public/logoreadymealz.jpeg';
 
 /**
  * Enhanced Navbar Component - Updated
