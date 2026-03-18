@@ -175,7 +175,6 @@ function Navbar() {
                 <FiMapPin className="h-4 w-4 text-orange-500 flex-shrink-0" />
                 <span className="max-w-[100px] sm:max-w-[140px] truncate">{city}</span>
               </div>
-
               {/* Cart - only when logged in */}
               {isLoggedIn && (
                 <Link
@@ -190,7 +189,6 @@ function Navbar() {
                   )}
                 </Link>
               )}
-
               {/* User Dropdown / Auth */}
               {isLoggedIn ? (
                 <div className="relative" ref={dropdownRef}>

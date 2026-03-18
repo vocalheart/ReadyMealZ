@@ -6,12 +6,23 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { setUser, logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
-
-// React Icons
-import { FaUserEdit, FaLock, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
-
-// Toastify
 import { toast } from "react-toastify";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  LogOut,
+  Edit2,
+  Save,
+  X,
+  Eye,
+  EyeOff,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+  Loader,
+} from "lucide-react";
 
 interface UpdateForm {
   name: string;
@@ -35,6 +46,11 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
   const [form, setForm] = useState<UpdateForm>({
     name: "",
@@ -117,7 +133,7 @@ export default function ProfilePage() {
       if (res.data?.success) {
         dispatch(setUser(res.data.user));
         setEditMode(false);
-        toast.success("Profile updated successfully!", {
+        toast.success("Profile updated successfully! ✓", {
           position: "top-right",
           autoClose: 4000,
         });
@@ -155,7 +171,7 @@ export default function ProfilePage() {
       );
 
       if (res.data?.success) {
-        toast.success("Password changed successfully!", {
+        toast.success("Password changed successfully! ✓", {
           position: "top-right",
           autoClose: 4000,
         });
@@ -198,66 +214,124 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600 text-lg sm:text-xl">
-        Loading Profile...
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-8 h-8 text-orange-500 animate-spin mx-auto mb-3" />
+          <p className="text-gray-600 font-medium text-xs sm:text-base">
+            Loading your profile...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pb-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pb-8 sm:pb-12">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+            My Account
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">
+            Manage your profile and account settings
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* PROFILE CARD */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl p-6 sm:p-8 border border-orange-100 order-1 lg:order-none">
-            <div className="flex flex-col items-center text-center">
-              {user.name ? (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center text-white text-4xl sm:text-5xl font-bold shadow-md">
-                  {user.name.charAt(0).toUpperCase()}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-white to-orange-50 rounded-lg sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 md:p-8 border border-orange-100">
+              <div className="flex flex-col items-center text-center">
+                {/* Avatar */}
+                {user.name ? (
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg transform hover:scale-105 transition-transform">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                ) : (
+                  <User className="w-20 h-20 sm:w-24 sm:h-24 text-orange-500" />
+                )}
+
+                {/* Name */}
+                <h2 className="mt-4 sm:mt-6 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  {user.name || "User"}
+                </h2>
+
+                {/* Email */}
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 break-all">
+                  {user.email}
+                </p>
+
+                {/* Role Badge */}
+                <div className="mt-4 flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 rounded-full border border-orange-200">
+                  <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm font-semibold capitalize">
+                    {user.role || "User"}
+                  </span>
                 </div>
-              ) : (
-                <FaUserCircle className="w-24 h-24 sm:w-28 sm:h-28 text-orange-500" />
-              )}
 
-              <h2 className="mt-4 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
-                {user.name || "User"}
-              </h2>
+                {/* Account Status */}
+                <div className="mt-4 flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs sm:text-sm font-medium">
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Account Active</span>
+                </div>
 
-              <p className="mt-1 text-sm sm:text-base text-gray-600 break-all">
-                {user.email}
-              </p>
+                {/* Edit Button */}
+                <button
+                  onClick={() => setEditMode(!editMode)}
+                  className={`mt-6 w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 transform active:scale-95 ${
+                    editMode
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg"
+                  }`}
+                >
+                  <Edit2 className="w-4 h-4" />
+                  {editMode ? "Cancel Edit" : "Edit Profile"}
+                </button>
 
-              <span className="mt-3 px-4 py-1 text-xs sm:text-sm bg-orange-100 text-orange-700 rounded-full font-medium">
-                {user.role || "User"}
-              </span>
+                {/* Change Password Button */}
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="mt-2 w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 text-white py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 transform active:scale-95"
+                >
+                  <Lock className="w-4 h-4" />
+                  Change Password
+                </button>
 
-              <button
-                onClick={() => setEditMode(!editMode)}
-                className="mt-6 w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-xl font-medium transition text-sm sm:text-base"
-              >
-                <FaUserEdit />
-                {editMode ? "Cancel Edit" : "Edit Profile"}
-              </button>
-
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="mt-3 w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 text-white py-3 px-4 rounded-xl font-medium transition text-sm sm:text-base"
-              >
-                <FaLock />
-                Change Password
-              </button>
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 transform active:scale-95"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
 
           {/* ACCOUNT DETAILS */}
-          <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl p-6 sm:p-8 border border-orange-100 order-2">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-6">
-              Account Information
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+          <div className="lg:col-span-2 bg-white rounded-lg sm:rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-4 sm:p-6 md:p-8 border border-orange-100">
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
               <div>
-                <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1.5">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
+                  Account Information
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  {editMode ? "Edit your details below" : "Your personal details"}
+                </p>
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Name Field */}
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4 text-orange-600" />
                   Full Name
                 </label>
                 <input
@@ -266,12 +340,15 @@ export default function ProfilePage() {
                   value={form.name}
                   onChange={handleChange}
                   disabled={!editMode}
-                  className="w-full p-3 text-sm sm:text-base bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base bg-gray-50 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter your full name"
                 />
               </div>
 
+              {/* Email Field */}
               <div>
-                <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1.5">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-orange-600" />
                   Email Address
                 </label>
                 <input
@@ -280,109 +357,255 @@ export default function ProfilePage() {
                   value={form.email}
                   onChange={handleChange}
                   disabled={!editMode}
-                  className="w-full p-3 text-sm sm:text-base bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base bg-gray-50 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter your email"
                 />
               </div>
 
+              {/* Phone Field */}
               <div>
-                <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1.5">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-orange-600" />
                   Mobile Number
                 </label>
                 <input
-                  type="text"
+                  type="tel"
                   name="mobile"
                   value={form.mobile}
                   onChange={handleChange}
                   disabled={!editMode}
-                  className="w-full p-3 text-sm sm:text-base bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base bg-gray-50 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter your phone number"
                 />
               </div>
 
-              {/* <div>
-                <label className="block text-xs sm:text-sm text-gray-600 font-medium mb-1.5">
-                  Account Role
-                </label>
-                <div className="p-3 text-sm sm:text-base bg-gray-100 border border-gray-300 rounded-xl text-gray-800 font-medium">
-                  {user.role || "—"}
-                </div>
-              </div> */}         
-
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 sm:pt-6 border-t border-gray-200">
+                {editMode && (
+                  <button
+                    onClick={handleUpdateProfile}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 disabled:opacity-60 transform active:scale-95"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
-            {editMode && (
-              <button
-                onClick={handleUpdateProfile}
-                disabled={saving}
-                className="mt-8 w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-medium transition text-sm sm:text-base disabled:opacity-60"
-              >
-                {saving ? "Updating..." : "Save Changes"}
-              </button>
-            )}
+            {/* Security Section */}
+            <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                    Security
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Manage your account security
+                  </p>
+                </div>
+              </div>
 
-            <button
-              onClick={handleLogout}
-              className="mt-5 w-full sm:w-auto flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-medium transition text-sm sm:text-base"
-            >
-              <FaSignOutAlt />
-              Logout Account
-            </button>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs sm:text-sm font-semibold text-gray-900">
+                        Password
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Last changed 90 days ago
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* CHANGE PASSWORD MODAL */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <FaLock className="text-orange-600" />
-              Change Password
-            </h2>
-
-            <div className="space-y-5">
-              <input
-                type="password"
-                name="currentPassword"
-                placeholder="Current Password"
-                value={passwordForm.currentPassword}
-                onChange={handlePasswordChange}
-                className="w-full p-3.5 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-400 outline-none transition"
-              />
-
-              <input
-                type="password"
-                name="newPassword"
-                placeholder="New Password"
-                value={passwordForm.newPassword}
-                onChange={handlePasswordChange}
-                className="w-full p-3.5 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-400 outline-none transition"
-              />
-
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm New Password"
-                value={passwordForm.confirmPassword}
-                onChange={handlePasswordChange}
-                className="w-full p-3.5 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-400 outline-none transition"
-              />
-
-              <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <button
-                  onClick={handleChangePassword}
-                  disabled={passwordLoading}
-                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3.5 rounded-xl font-medium transition text-sm sm:text-base disabled:opacity-60"
-                >
-                  {passwordLoading ? "Updating..." : "Update Password"}
-                </button>
-
-                <button
-                  onClick={() => setShowPasswordModal(false)}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3.5 rounded-xl font-medium transition text-sm sm:text-base"
-                >
-                  Cancel
-                </button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-8">
+          <div className="bg-white rounded-lg sm:rounded-2xl p-4 sm:p-6 md:p-8 w-full max-w-md shadow-2xl border border-gray-200 transform transition-all">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                  <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  Change Password
+                </h2>
               </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
+              Enter your current password and a new password to update your account security
+            </p>
+
+            {/* Form Fields */}
+            <div className="space-y-4 sm:space-y-5 mb-4 sm:mb-6">
+              {/* Current Password */}
+              <div className="relative">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.current ? "text" : "password"}
+                    name="currentPassword"
+                    placeholder="Enter current password"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 outline-none transition pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPasswords((p) => ({
+                        ...p,
+                        current: !p.current,
+                      }))
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    {showPasswords.current ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div className="relative">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.new ? "text" : "password"}
+                    name="newPassword"
+                    placeholder="Enter new password"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 outline-none transition pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPasswords((p) => ({
+                        ...p,
+                        new: !p.new,
+                      }))
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    {showPasswords.new ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="relative">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.confirm ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-base border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-300 focus:border-orange-500 outline-none transition pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPasswords((p) => ({
+                        ...p,
+                        confirm: !p.confirm,
+                      }))
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    {showPasswords.confirm ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleChangePassword}
+                disabled={passwordLoading}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 disabled:opacity-60 transform active:scale-95"
+              >
+                {passwordLoading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Update Password
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordForm({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
+                }}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 transform active:scale-95"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
