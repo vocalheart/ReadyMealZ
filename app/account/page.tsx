@@ -7,22 +7,7 @@ import { RootState } from "../redux/store";
 import { setUser, logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
 import { toast } from "react-toastify";
-import {
-  User,
-  Mail,
-  Phone,
-  Lock,
-  LogOut,
-  Edit2,
-  Save,
-  X,
-  Eye,
-  EyeOff,
-  Shield,
-  CheckCircle,
-  AlertCircle,
-  Loader,
-} from "lucide-react";
+import {User,Mail, Phone,Lock,LogOut,Edit2,Save,X,Eye,EyeOff,Shield,CheckCircle,AlertCircle,Loader} from "lucide-react";
 
 interface UpdateForm {
   name: string;

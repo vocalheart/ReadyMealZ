@@ -201,7 +201,7 @@ export default function CheckoutPage() {
         withCredentials: true,
       });
 
-      console.log("✅ Order created:", response.data);
+      console.log(" Order created:", response.data);
 
       if (response.data.success) {
         setOrderSuccess(true);
