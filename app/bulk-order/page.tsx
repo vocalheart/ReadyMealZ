@@ -17,7 +17,16 @@ import {
   Award,
   Target,
   Sparkles,
+  CreditCard,
+  Lock,
 } from "lucide-react";
+
+/* ─── Razorpay type declaration ─────────────── */
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 /* ─── Types ─────────────────────────────────── */
 interface BulkImage {
@@ -38,6 +47,18 @@ interface BulkOrder {
   isAvailable?: boolean;
   imageUrl: BulkImage[];
   createdAt: string;
+}
+
+/* ─── Load Razorpay script dynamically ──────── */
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 }
 
 /* ─── Image Slider ───────────────────────────── */
@@ -140,9 +161,14 @@ function QuoteDialog({
     quantity: "",
     requirements: "",
   });
-  const [submitted, setSubmitted] = useState(false);
+
+  // step: "form" | "paying" | "success"
+  const [step, setStep] = useState<"form" | "paying" | "success">("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Holds quoteId returned after first submit (pre-payment)
+  const [pendingQuoteId, setPendingQuoteId] = useState<string | null>(null);
 
   const set = (k: string, v: string) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -165,12 +191,15 @@ function QuoteDialog({
   const inp =
     "w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 bg-white transition";
 
+  /* ── Step 1: Submit form → get quoteId → create Razorpay order ── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      const res = await api.post("/bulk-quotes/submit", {
+      // 1️  Save the quote to DB
+      const quoteRes = await api.post("/bulk-quotes/submit", {
         bulkOrderId: order._id,
         name: form.name,
         email: form.email,
@@ -181,13 +210,102 @@ function QuoteDialog({
         quantity: Number(form.quantity),
         requirements: form.requirements,
       });
-      if (res.data.success) setSubmitted(true);
-      else setError(res.data.message || "Submission failed");
+
+      if (!quoteRes.data.success) {
+        setError(quoteRes.data.message || "Failed to save quote.");
+        setLoading(false);
+        return;
+      }
+
+      const quoteId = quoteRes.data.data?._id || quoteRes.data.quoteId;
+      if (!quoteId) {
+        setError("Could not retrieve quote ID from server.");
+        setLoading(false);
+        return;
+      }
+
+      setPendingQuoteId(quoteId);
+
+      // 2️  Create Razorpay order
+      const orderRes = await api.post("/bulk/create-order", { quoteId });
+
+      if (!orderRes.data.success) {
+        setError(orderRes.data.message || "Failed to create payment order.");
+        setLoading(false);
+        return;
+      }
+
+      const { razorpayOrder } = orderRes.data;
+
+      // 3️  Load Razorpay SDK and open checkout
+      const sdkLoaded = await loadRazorpayScript();
+      if (!sdkLoaded) {
+        setError("Payment gateway failed to load. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      setStep("paying");
+      setLoading(false);
+
+      const rzp = new window.Razorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // set in your .env
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: "Bulk Order",
+        description: order.name,
+        order_id: razorpayOrder.id,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone,
+        },
+        theme: { color: "#f97316" },
+
+        /* ── Payment success handler ── */
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            const verifyRes = await api.post("/bulk/verify-payment", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.data.success) {
+              setStep("success");
+            } else {
+              setStep("form");
+              setError(
+                verifyRes.data.message ||
+                  "Payment verification failed. Contact support."
+              );
+            }
+          } catch {
+            setStep("form");
+            setError("Payment verification failed. Please contact support.");
+          }
+        },
+
+        /* ── Dialog dismissed without payment ── */
+        modal: {
+          ondismiss: () => {
+            setStep("form");
+            setError(
+              "Payment was cancelled. Please complete payment to confirm your order."
+            );
+          },
+        },
+      });
+
+      rzp.open();
     } catch (err: any) {
       setError(
-        err?.response?.data?.message || "Failed to submit. Please try again."
+        err?.response?.data?.message || "Something went wrong. Please try again."
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -195,26 +313,30 @@ function QuoteDialog({
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-lg sm:rounded-2xl w-full max-w-2xl my-6 shadow-2xl">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-lg sm:rounded-t-2xl z-10">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-gray-900">
-              Request a Quote
+              {step === "paying" ? "Complete Payment" : "Request a Quote"}
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               For:{" "}
               <span className="text-orange-500 font-medium">{order.name}</span>
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition flex-shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Don't allow close while Razorpay is open */}
+          {step !== "paying" && (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Order summary strip */}
+        {/* ── Order summary strip ── */}
         <div className="mx-4 sm:mx-6 mt-4 p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg sm:rounded-xl flex items-center gap-3">
           {order.imageUrl?.[0]?.url && (
             <img
@@ -243,18 +365,21 @@ function QuoteDialog({
           )}
         </div>
 
-        {submitted ? (
+        {/* ══════════════════════════════════════════
+            SUCCESS STATE
+        ══════════════════════════════════════════ */}
+        {step === "success" && (
           <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
               <Check className="w-8 h-8 text-green-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-              Quote Submitted! 🎉
+              Order Confirmed! 🎉
             </h3>
             <p className="text-gray-500 text-xs sm:text-sm max-w-sm mx-auto">
-              We'll contact you at{" "}
+              Payment successful. We'll contact you at{" "}
               <span className="font-medium text-gray-700">{form.phone}</span>{" "}
-              within 2 hours.
+              within 2 hours to finalise your event.
             </p>
             <button
               onClick={onClose}
@@ -263,7 +388,34 @@ function QuoteDialog({
               Close
             </button>
           </div>
-        ) : (
+        )}
+
+        {/* ══════════════════════════════════════════
+            PAYING STATE (Razorpay is open as overlay)
+        ══════════════════════════════════════════ */}
+        {step === "paying" && (
+          <div className="px-4 sm:px-6 py-10 text-center space-y-4">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
+              <CreditCard className="w-8 h-8 text-orange-500" />
+            </div>
+            <p className="text-sm font-semibold text-gray-800">
+              Complete your payment in the Razorpay window
+            </p>
+            <p className="text-xs text-gray-400">
+              Do not close this page. Your order will be confirmed once payment
+              is successful.
+            </p>
+            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 mt-2">
+              <Lock className="w-3 h-3" />
+              Secured by Razorpay
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════
+            FORM STATE
+        ══════════════════════════════════════════ */}
+        {step === "form" && (
           <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5 space-y-4">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-600">
@@ -408,6 +560,15 @@ function QuoteDialog({
               </div>
             )}
 
+            {/* Payment notice */}
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+              <Lock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+              <span>
+                Your request will be confirmed only after successful payment via
+                Razorpay. No charges until you approve.
+              </span>
+            </div>
+
             <div className="flex gap-3 pt-1">
               <button
                 type="button"
@@ -419,13 +580,20 @@ function QuoteDialog({
               <button
                 type="submit"
                 disabled={loading}
-                className={`flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-white transition ${
+                className={`flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2 ${
                   loading
                     ? "bg-orange-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg"
                 }`}
               >
-                {loading ? "Submitting..." : "Submit Request"}
+                {loading ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    Proceed to Pay
+                  </>
+                )}
               </button>
             </div>
           </form>
