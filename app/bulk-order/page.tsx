@@ -19,6 +19,7 @@ import {
   Sparkles,
   CreditCard,
   Lock,
+  ArrowRight,
 } from "lucide-react";
 
 /* ─── Razorpay type declaration ─────────────── */
@@ -143,7 +144,7 @@ function ImageSlider({ images, name }: { images: BulkImage[]; name: string }) {
   );
 }
 
-/* ─── Quote Dialog ───────────────────────────── */
+/* ─── Quote Dialog (2-STEP MOBILE OPTIMIZED) ─────────────────────── */
 function QuoteDialog({
   order,
   onClose,
@@ -162,8 +163,8 @@ function QuoteDialog({
     requirements: "",
   });
 
-  // step: "form" | "paying" | "success"
-  const [step, setStep] = useState<"form" | "paying" | "success">("form");
+  // step: "step1" | "step2" | "paying" | "success"
+  const [step, setStep] = useState<"step1" | "step2" | "paying" | "success">("step1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -191,9 +192,36 @@ function QuoteDialog({
   const inp =
     "w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 bg-white transition";
 
-  /* ── Step 1: Submit form → get quoteId → create Razorpay order ── */
-  const handleSubmit = async (e: React.FormEvent) => {
+  /* ── Step 1 Validation ── */
+  const isStep1Valid = form.name && form.email && form.phone && form.eventType && form.eventDate;
+
+  /* ── Step 2 Validation ── */
+  const isStep2Valid = form.quantity && !isNaN(Number(form.quantity));
+
+  /* ── Move to Step 2 ── */
+  const handleStep1Next = () => {
+    if (!isStep1Valid) {
+      setError("Please fill all required fields in Step 1");
+      return;
+    }
+    setError("");
+    setStep("step2");
+  };
+
+  /* ── Go back to Step 1 ── */
+  const handleStep2Back = () => {
+    setError("");
+    setStep("step1");
+  };
+
+  /* ── Step 2: Submit form → get quoteId → create Razorpay order ── */
+  const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isStep2Valid) {
+      setError("Please fill quantity");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -278,14 +306,14 @@ function QuoteDialog({
             if (verifyRes.data.success) {
               setStep("success");
             } else {
-              setStep("form");
+              setStep("step2");
               setError(
                 verifyRes.data.message ||
                   "Payment verification failed. Contact support."
               );
             }
           } catch {
-            setStep("form");
+            setStep("step2");
             setError("Payment verification failed. Please contact support.");
           }
         },
@@ -293,7 +321,7 @@ function QuoteDialog({
         /* ── Dialog dismissed without payment ── */
         modal: {
           ondismiss: () => {
-            setStep("form");
+            setStep("step2");
             setError(
               "Payment was cancelled. Please complete payment to confirm your order."
             );
@@ -318,7 +346,7 @@ function QuoteDialog({
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-lg sm:rounded-t-2xl z-10">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-gray-900">
-              {step === "paying" ? "Complete Payment" : "Request a Quote"}
+              {step === "paying" ? "Complete Payment" : step === "step2" ? "Order Details" : "Request a Quote"}
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               For:{" "}
@@ -413,15 +441,26 @@ function QuoteDialog({
         )}
 
         {/* ══════════════════════════════════════════
-            FORM STATE
+            STEP 1: PERSONAL & EVENT INFO
         ══════════════════════════════════════════ */}
-        {step === "form" && (
-          <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5 space-y-4">
+        {step === "step1" && (
+          <form onSubmit={(e) => { e.preventDefault(); handleStep1Next(); }} className="px-4 sm:px-6 py-5 space-y-4">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-600">
                 {error}
               </div>
             )}
+
+            {/* STEP INDICATOR */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
+                1
+              </div>
+              <div className="h-1 flex-1 bg-gray-200 rounded-full"></div>
+              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xs font-bold">
+                2
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -509,7 +548,73 @@ function QuoteDialog({
                   className={inp}
                 />
               </div>
-              <div className="sm:col-span-2">
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2 ${
+                  isStep1Valid
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg"
+                    : "bg-orange-300 cursor-not-allowed"
+                }`}
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ══════════════════════════════════════════
+            STEP 2: QUANTITY & REQUIREMENTS
+        ══════════════════════════════════════════ */}
+        {step === "step2" && (
+          <form onSubmit={handleStep2Submit} className="px-4 sm:px-6 py-5 space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            {/* STEP INDICATOR */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
+                1
+              </div>
+              <div className="h-1 flex-1 bg-orange-500 rounded-full"></div>
+              <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
+                2
+              </div>
+            </div>
+
+            {/* SUMMARY OF STEP 1 DATA */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+              <p className="text-xs font-semibold text-blue-900">Order Summary</p>
+              <div className="text-xs text-blue-800 space-y-1">
+                <div className="flex justify-between">
+                  <span>Name:</span>
+                  <span className="font-medium">{form.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Event:</span>
+                  <span className="font-medium">{form.eventType} on {form.eventDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Contact:</span>
+                  <span className="font-medium">{form.phone}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Quantity <span className="text-red-500">*</span>
                   {(order.minQuantity || order.maxQuantity) && (
@@ -569,13 +674,14 @@ function QuoteDialog({
               </span>
             </div>
 
-            <div className="flex gap-3 pt-1">
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
-                onClick={onClose}
-                className="flex-1 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-gray-700 transition"
+                onClick={handleStep2Back}
+                className="flex-1 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm text-gray-700 transition flex items-center justify-center gap-2"
               >
-                Cancel
+                <ChevronLeft className="w-4 h-4" />
+                Back
               </button>
               <button
                 type="submit"

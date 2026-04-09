@@ -168,13 +168,8 @@ export default function CheckoutPage() {
       setCurrentStep("review");
     }
   };
-
   const handleCreateOrder = async () => {
     setError(null);
-
-    console.log("🛒 Current cart state:", { items, total, itemCount });
-    console.log("🛒 Cart from Redux:", cart);
-
     setOrderCreating(true);
 
     try {
@@ -192,42 +187,76 @@ export default function CheckoutPage() {
         useCart: true,
       };
 
-      console.log(
-        "📤 Creating order with data:",
-        JSON.stringify(orderData, null, 2)
-      );
-
       const response = await api.post("/orders/create", orderData, {
         withCredentials: true,
       });
 
-      console.log(" Order created:", response.data);
+      const { order, razorpayOrder } = response.data.data;
 
-      if (response.data.success) {
+      // 🟢 CASE 1: COD
+      if (paymentMethod === "cod") {
         setOrderSuccess(true);
-        setCreatedOrderId(response.data.data.order._id);
-
+        setCreatedOrderId(order._id);
         setTimeout(() => {
-          router.push(`/orders/${response.data.data.order._id}`);
-        }, 2500);
-      } else {
-        setError(response.data.message || "Failed to create order");
+          router.push(`/orders/${order._id}`);
+        }, 2000);
       }
+      if (!(window as any).Razorpay) {
+        alert("Razorpay not loaded properly");
+        return;
+      }
+
+      // CASE 2: ONLINE PAYMENT
+      if (paymentMethod === "online") {
+        const options = {
+          key: "rzp_test_SYa9s5fnNprq4h", //  apna key_id
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          order_id: razorpayOrder.id,
+
+          name: "Food App",
+          description: "Order Payment",
+
+          handler: async function (response: any) {
+            // VERIFY PAYMENT
+            await api.post("/orders/verify-payment", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            setOrderSuccess(true);
+            setCreatedOrderId(order._id);
+
+            setTimeout(() => {
+              router.push(`/orders/${order._id}`);
+            }, 2000);
+          },
+
+          prefill: {
+            name: deliveryAddress.name,
+            contact: deliveryAddress.phone,
+          },
+
+          theme: {
+            color: "#f97316",
+          },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+
+        //  Payment failed
+        rzp.on("payment.failed", function (response: any) {
+          console.log(response.error);
+          setError("Payment failed. Please try again.");
+        });
+
+        rzp.open();
+      }
+
     } catch (err: any) {
-      console.error("❌ Full error object:", err);
-      console.error("❌ Error response:", err.response?.data);
-
-      const errorMsg =
-        err.response?.data?.message || err.message || "Failed to create order";
-      setError(errorMsg);
-
-      if (
-        err.response?.data?.errors &&
-        Array.isArray(err.response.data.errors)
-      ) {
-        console.log("❌ Validation errors:", err.response.data.errors);
-        setValidationErrors(err.response.data.errors);
-      }
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to create order");
     } finally {
       setOrderCreating(false);
     }
@@ -359,21 +388,19 @@ export default function CheckoutPage() {
             {steps.map((step, idx) => (
               <div key={step} className="flex items-center gap-2 flex-shrink-0">
                 <div
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition ${
-                    steps.indexOf(currentStep) >= idx
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition ${steps.indexOf(currentStep) >= idx
                       ? "bg-orange-500 text-white"
                       : "bg-gray-200 text-gray-600"
-                  }`}
+                    }`}
                 >
                   {idx + 1}
                 </div>
                 {idx < steps.length - 1 && (
                   <div
-                    className={`w-6 h-0.5 ${
-                      steps.indexOf(currentStep) > idx
+                    className={`w-6 h-0.5 ${steps.indexOf(currentStep) > idx
                         ? "bg-orange-500"
                         : "bg-gray-300"
-                    }`}
+                      }`}
                   />
                 )}
               </div>
@@ -385,11 +412,10 @@ export default function CheckoutPage() {
             {steps.map((step, idx) => (
               <div key={step} className="flex flex-col items-center">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition ${
-                    steps.indexOf(currentStep) >= idx
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition ${steps.indexOf(currentStep) >= idx
                       ? "bg-orange-500 text-white"
                       : "bg-gray-200 text-gray-600"
-                  }`}
+                    }`}
                 >
                   {steps.indexOf(currentStep) > idx ? (
                     <Check className="w-6 h-6" />
@@ -424,11 +450,10 @@ export default function CheckoutPage() {
             {/* Delivery Address Section */}
             {(currentStep === "address" || currentStep === "review") && (
               <div
-                className={`bg-white rounded-lg sm:rounded-2xl border transition-all ${
-                  currentStep === "address"
+                className={`bg-white rounded-lg sm:rounded-2xl border transition-all ${currentStep === "address"
                     ? "border-orange-300 shadow-md"
                     : "border-gray-200"
-                } p-4 sm:p-6 md:p-8`}
+                  } p-4 sm:p-6 md:p-8`}
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -457,11 +482,10 @@ export default function CheckoutPage() {
                         value={deliveryAddress.name}
                         onChange={handleAddressChange}
                         placeholder="Full name"
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${
-                          validationErrors.find((e) => e.field === "name")
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${validationErrors.find((e) => e.field === "name")
                             ? "border-red-500 bg-red-50"
                             : "border-gray-300 focus:border-orange-500"
-                        } focus:outline-none focus:ring-2 focus:ring-orange-200`}
+                          } focus:outline-none focus:ring-2 focus:ring-orange-200`}
                       />
                       {validationErrors.find((e) => e.field === "name") && (
                         <p className="text-xs text-red-600 mt-1">
@@ -484,11 +508,10 @@ export default function CheckoutPage() {
                         value={deliveryAddress.phone}
                         onChange={handleAddressChange}
                         placeholder="10-12 digits"
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${
-                          validationErrors.find((e) => e.field === "phone")
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${validationErrors.find((e) => e.field === "phone")
                             ? "border-red-500 bg-red-50"
                             : "border-gray-300 focus:border-orange-500"
-                        } focus:outline-none focus:ring-2 focus:ring-orange-200`}
+                          } focus:outline-none focus:ring-2 focus:ring-orange-200`}
                       />
                       {validationErrors.find((e) => e.field === "phone") && (
                         <p className="text-xs text-red-600 mt-1">
@@ -511,11 +534,10 @@ export default function CheckoutPage() {
                         value={deliveryAddress.address}
                         onChange={handleAddressChange}
                         placeholder="House, street, area"
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${
-                          validationErrors.find((e) => e.field === "address")
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${validationErrors.find((e) => e.field === "address")
                             ? "border-red-500 bg-red-50"
                             : "border-gray-300 focus:border-orange-500"
-                        } focus:outline-none focus:ring-2 focus:ring-orange-200`}
+                          } focus:outline-none focus:ring-2 focus:ring-orange-200`}
                       />
                       {validationErrors.find((e) => e.field === "address") && (
                         <p className="text-xs text-red-600 mt-1">
@@ -538,11 +560,10 @@ export default function CheckoutPage() {
                         value={deliveryAddress.city}
                         onChange={handleAddressChange}
                         placeholder="City name"
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${
-                          validationErrors.find((e) => e.field === "city")
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${validationErrors.find((e) => e.field === "city")
                             ? "border-red-500 bg-red-50"
                             : "border-gray-300 focus:border-orange-500"
-                        } focus:outline-none focus:ring-2 focus:ring-orange-200`}
+                          } focus:outline-none focus:ring-2 focus:ring-orange-200`}
                       />
                       {validationErrors.find((e) => e.field === "city") && (
                         <p className="text-xs text-red-600 mt-1">
@@ -566,11 +587,10 @@ export default function CheckoutPage() {
                         onChange={handleAddressChange}
                         placeholder="6 digits"
                         maxLength={6}
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${
-                          validationErrors.find((e) => e.field === "pincode")
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base rounded-lg border transition ${validationErrors.find((e) => e.field === "pincode")
                             ? "border-red-500 bg-red-50"
                             : "border-gray-300 focus:border-orange-500"
-                        } focus:outline-none focus:ring-2 focus:ring-orange-200`}
+                          } focus:outline-none focus:ring-2 focus:ring-orange-200`}
                       />
                       {validationErrors.find((e) => e.field === "pincode") && (
                         <p className="text-xs text-red-600 mt-1">
@@ -628,11 +648,10 @@ export default function CheckoutPage() {
             {/* Payment Method Section */}
             {(currentStep === "payment" || currentStep === "review") && (
               <div
-                className={`bg-white rounded-lg sm:rounded-2xl border transition-all ${
-                  currentStep === "payment"
+                className={`bg-white rounded-lg sm:rounded-2xl border transition-all ${currentStep === "payment"
                     ? "border-orange-300 shadow-md"
                     : "border-gray-200"
-                } p-4 sm:p-6 md:p-8`}
+                  } p-4 sm:p-6 md:p-8`}
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -655,11 +674,10 @@ export default function CheckoutPage() {
                       return (
                         <label
                           key={method.id}
-                          className={`flex items-center p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
-                            paymentMethod === method.id
+                          className={`flex items-center p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${paymentMethod === method.id
                               ? "border-orange-500 bg-orange-50 shadow-md"
                               : "border-gray-200 hover:border-orange-300 bg-white"
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"
@@ -669,10 +687,10 @@ export default function CheckoutPage() {
                             onChange={(e) =>
                               setPaymentMethod(
                                 e.target.value as
-                                  | "cod"
-                                  | "online"
-                                  | "upi"
-                                  | "wallet"
+                                | "cod"
+                                | "online"
+                                | "upi"
+                                | "wallet"
                               )
                             }
                             className="w-4 h-4 text-orange-600 cursor-pointer"
@@ -831,11 +849,10 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleCreateOrder}
                     disabled={orderCreating || items.length === 0}
-                    className={`w-full py-3 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 text-sm ${
-                      orderCreating || items.length === 0
+                    className={`w-full py-3 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 text-sm ${orderCreating || items.length === 0
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg"
-                    }`}
+                      }`}
                   >
                     {orderCreating ? (
                       <>
@@ -874,11 +891,10 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleCreateOrder}
                     disabled={orderCreating || items.length === 0}
-                    className={`w-full py-2.5 sm:py-3 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 text-xs sm:text-sm ${
-                      orderCreating || items.length === 0
+                    className={`w-full py-2.5 sm:py-3 rounded-lg font-semibold text-white transition flex items-center justify-center gap-2 text-xs sm:text-sm ${orderCreating || items.length === 0
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg"
-                    }`}
+                      }`}
                   >
                     {orderCreating ? (
                       <>
