@@ -3,17 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../hooks/useCart";
-import {
-  Trash2,
-  ShoppingCart,
-  ArrowLeft,
-  Loader,
-  Plus,
-  Minus,
-  AlertCircle,
-  Check,
-  TrendingDown,
-} from "lucide-react";
+import {Trash2,ShoppingCart,ArrowLeft,Loader,Plus,Minus,AlertCircle,Check,TrendingDown} from "lucide-react";
 
 /**
  * Cart Page Component - Enhanced UI/UX
@@ -112,7 +102,7 @@ export default function CartPage() {
               <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-sm flex-shrink-0">
                 <p className="text-xs text-gray-500 font-semibold mb-1">
                   Subtotal
-                </p>
+                </p>    
                 <p className="text-lg sm:text-2xl font-bold text-orange-600">
                   ₹{total}
                 </p>
@@ -129,8 +119,7 @@ export default function CartPage() {
               Cart cleared successfully!
             </p>
           </div>
-        )}
-
+        )};
         {/* Error Message */}
         {error && (
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl flex items-start justify-between gap-2">

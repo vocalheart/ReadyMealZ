@@ -93,10 +93,10 @@ const statusConfig = {
   },
 };
 
-/**
+                    /**
  * Orders List Page - Enhanced UI/UX
  * Fully responsive with mobile-first design (10px minimum text)
- */
+                    **/     
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);

@@ -883,46 +883,7 @@ export default function BulkOrdersPage() {
           </button>
         </div>
       </section>
-
-      {/* FEATURES */}
-      <section className="bg-white py-10 sm:py-12 px-4 border-b border-gray-100">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-          {[
-            {
-              icon: Users,
-              title: "Any Quantity",
-              desc: "From 20 to 1000+ guests",
-            },
-            {
-              icon: Clock,
-              title: "On-Time Delivery",
-              desc: "Guaranteed timely service",
-            },
-            {
-              icon: Shield,
-              title: "Quality Assured",
-              desc: "Fresh & hygienic meals",
-            },
-          ].map((f) => {
-            const Icon = f.icon;
-            return (
-              <div key={f.title} className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center text-orange-600">
-                  <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
-                </div>
-                <h3 className="font-bold text-gray-900 text-sm sm:text-base">
-                  {f.title}
-                </h3>
-                <p className="text-gray-500 text-xs sm:text-sm text-center">
-                  {f.desc}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* BULK PACKS */}
+  {/* BULK PACKS */}
       <section
         id="bulk-packs"
         className="py-12 sm:py-16 px-4 bg-gradient-to-b from-gray-50 to-gray-100"
@@ -967,88 +928,46 @@ export default function BulkOrdersPage() {
         </div>
       </section>
 
-      {/* PACKAGES */}
-      <section className="py-12 sm:py-16 px-4 bg-white border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">
-              Choose Your Package
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500">
-              Select the best package for your event size
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PACKAGES.map((pkg) => {
-              const Icon = pkg.icon;
-              return (
-                <div
-                  key={pkg.id}
-                  className={`relative rounded-lg sm:rounded-2xl border-2 p-6 sm:p-8 bg-white transition-all transform hover:scale-105 ${
-                    pkg.popular
-                      ? "border-orange-500 shadow-xl ring-1 ring-orange-100"
-                      : "border-gray-200 shadow-sm hover:border-orange-300"
-                  }`}
-                >
-                  {pkg.popular && (
-                    <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full whitespace-nowrap shadow-lg">
-                        Most Popular ⭐
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                      {pkg.name}
-                    </h3>
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center text-orange-600">
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </div>
-                  </div>
-                  <div className="mb-1">
-                    <span className="text-2xl sm:text-3xl font-bold text-orange-600">
-                      ₹{pkg.price}
-                    </span>
-                    <span className="text-gray-500 text-xs sm:text-sm">/meal</span>
-                  </div>
-                  <p className="text-gray-400 text-xs sm:text-sm mb-5 sm:mb-6">
-                    Min. {pkg.minMeals} meals
-                  </p>
-                  <ul className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
-                    {pkg.features.map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-center gap-2 text-xs sm:text-sm text-gray-600"
-                      >
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    onClick={() =>
-                      document.getElementById("bulk-packs")?.scrollIntoView({
-                        behavior: "smooth",
-                      })
-                    }
-                    className={`w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition transform hover:scale-105 active:scale-95 ${
-                      pkg.popular
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg"
-                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    Browse Packs
-                  </button>
+     
+      {/* FEATURES */}
+      <section className="bg-white py-10 sm:py-12 px-4 border-b border-gray-100">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+          {[
+            {
+              icon: Users,
+              title: "Any Quantity",
+              desc: "From 10 to 50+ guests",
+            },
+            {
+              icon: Clock,
+              title: "On-Time Delivery",
+              desc: "Guaranteed timely service",
+            },
+            {
+              icon: Shield,
+              title: "Quality Assured",
+              desc: "Fresh & hygienic meals",
+            },
+          ].map((f) => {
+            const Icon = f.icon;
+            return (
+              <div key={f.title} className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center text-orange-600">
+                  <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-              );
-            })}
-          </div>
-          <p className="text-center text-gray-400 text-xs sm:text-sm mt-8 sm:mt-10">
-            ✨ All packages include free delivery, GST invoice, and dedicated
-            account manager
-          </p>
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base">
+                  {f.title}
+                </h3>
+                <p className="text-gray-500 text-xs sm:text-sm text-center">
+                  {f.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
+
+    
 
       {/* TRUST STRIP */}
       <section className="bg-gradient-to-r from-orange-50 to-amber-50 py-10 sm:py-12 px-4 border-t border-orange-100">
