@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {Search,SlidersHorizontal,X,Plus, ChevronLeft, ChevronRight, Star,Clock,Flame } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../lib/axios";
-import { MealCard } from "../components/MealCard"; // Import the fixed component
+import { MealCard } from "../components/MealCard";
 
 /* ─── Types ─────────────────────────────────── */
 interface Category {
@@ -24,7 +24,6 @@ interface MealImage {
   url: string;
   key: string;
 }
-
 interface Meal {
   _id: string;
   name: string;
@@ -44,7 +43,6 @@ interface Meal {
   preparationTime?: number;
   calories?: number;
 }
-
 interface Pagination {
   page: number;
   totalPages: number;
@@ -56,14 +54,13 @@ interface Pagination {
 function SkeletonCard() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
-      <div className="h-40 bg-gray-100" />
-      <div className="p-3 space-y-2">
-        <div className="h-4 bg-gray-100 rounded w-3/4" />
+      <div className="h-32 sm:h-40 bg-gray-100" />
+      <div className="p-2.5 sm:p-3 space-y-2">
+        <div className="h-3.5 bg-gray-100 rounded w-3/4" />
         <div className="h-3 bg-gray-100 rounded w-full" />
-        <div className="h-3 bg-gray-100 rounded w-2/3" />
         <div className="flex justify-between mt-3">
-          <div className="h-5 bg-gray-100 rounded w-16" />
-          <div className="h-7 bg-gray-100 rounded w-16" />
+          <div className="h-5 bg-gray-100 rounded w-14" />
+          <div className="h-7 bg-gray-100 rounded w-14" />
         </div>
       </div>
     </div>
@@ -137,9 +134,7 @@ function FilterPanel({
               />
               <span className="text-sm text-gray-600">{cat.name}</span>
               {cat.mealCount !== undefined && (
-                <span className="ml-auto text-xs text-gray-400">
-                  {cat.mealCount}
-                </span>
+                <span className="ml-auto text-xs text-gray-400">{cat.mealCount}</span>
               )}
             </label>
           ))}
@@ -188,7 +183,11 @@ function FilterPanel({
           <div className="space-y-1.5">
             {allTags.map((tag) => (
               <label key={tag._id} className="flex items-center gap-2 cursor-pointer">
-                <input  type="checkbox"  checked={selectedTags.includes(tag._id)} onChange={() => toggleTag(tag._id)}className="accent-orange-500 w-3.5 h-3.5 rounded"
+                <input
+                  type="checkbox"
+                  checked={selectedTags.includes(tag._id)}
+                  onChange={() => toggleTag(tag._id)}
+                  className="accent-orange-500 w-3.5 h-3.5 rounded"
                 />
                 <span className="text-sm text-gray-600">{tag.name}</span>
               </label>
@@ -228,12 +227,11 @@ export default function MenuPage() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filtersMounted = useRef(false);
 
-  /* ── Load all filters in ONE call → /user/filters ── */
+  /* ── Load filters ── */
   useEffect(() => {
     const loadFilters = async () => {
       setLoadingFilters(true);
       try {
-        // Primary: single combined endpoint
         const res = await api.get("/user/filters");
         if (res.data.success) {
           setCategories(res.data.categories || []);
@@ -241,7 +239,6 @@ export default function MenuPage() {
           setAllTags(res.data.tags || []);
         }
       } catch {
-        // Fallback: individual endpoints
         try {
           const [catRes, ftRes, tagRes] = await Promise.all([
             api.get("/user/categories"),
@@ -261,7 +258,7 @@ export default function MenuPage() {
     loadFilters();
   }, []);
 
-  /* ── Core fetch function ── */
+  /* ── Core fetch ── */
   const fetchMeals = useCallback(async (page: number) => {
     setLoading(true);
     setError("");
@@ -288,43 +285,24 @@ export default function MenuPage() {
     }
   }, [search, selectedCategory, selectedFoodType, selectedTags]);
 
-  /* ── Initial load ── */
-  useEffect(() => {
-    fetchMeals(1);
-  }, []);
+  useEffect(() => { fetchMeals(1); }, []);
 
-  /* ── Filter change → reset to page 1 ── */
   useEffect(() => {
-    if (!filtersMounted.current) {
-      filtersMounted.current = true;
-      return;
-    }
+    if (!filtersMounted.current) { filtersMounted.current = true; return; }
     setCurrentPage(1);
     fetchMeals(1);
   }, [selectedCategory, selectedFoodType, selectedTags, fetchMeals]);
 
-  /* ── Debounced search ── */
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setCurrentPage(1);
-      fetchMeals(1);
-    }, 500);
-    return () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-    };
+    searchTimer.current = setTimeout(() => { setCurrentPage(1); fetchMeals(1); }, 500);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
   }, [search, fetchMeals]);
 
-  /* ── Page navigation ── */
-  useEffect(() => {
-    fetchMeals(currentPage);
-  }, [currentPage]);
+  useEffect(() => { fetchMeals(currentPage); }, [currentPage]);
 
-  /* ── Helpers ── */
   const toggleTag = (id: string) =>
-    setSelectedTags((p) =>
-      p.includes(id) ? p.filter((t) => t !== id) : [...p, id]
-    );
+    setSelectedTags((p) => p.includes(id) ? p.filter((t) => t !== id) : [...p, id]);
 
   const clearFilters = () => {
     setSelectedCategory("");
@@ -334,40 +312,29 @@ export default function MenuPage() {
   };
 
   const activeFilterCount =
-    (selectedCategory ? 1 : 0) +
-    (selectedFoodType ? 1 : 0) +
-    selectedTags.length;
+    (selectedCategory ? 1 : 0) + (selectedFoodType ? 1 : 0) + selectedTags.length;
 
   const filterProps = {
-    categories,
-    foodTypes,
-    allTags,
-    selectedCategory,
-    setSelectedCategory,
-    selectedFoodType,
-    setSelectedFoodType,
-    selectedTags,
-    toggleTag,
-    clearFilters,
-    loadingFilters,
+    categories, foodTypes, allTags,
+    selectedCategory, setSelectedCategory,
+    selectedFoodType, setSelectedFoodType,
+    selectedTags, toggleTag, clearFilters, loadingFilters,
   };
 
-  /* ─── Render ─────────────────────────────── */
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+
         {/* Header */}
-        <div className="mb-5">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            Our Menu
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
+        <div className="mb-4">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Our Menu</h1>
+          <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
             Explore our delicious range of homemade meals
           </p>
         </div>
 
-        {/* Search + Mobile Filter Button */}
-        <div className="flex gap-2 mb-5">
+        {/* Search + Filter Button */}
+        <div className="flex gap-2 mb-3 sm:mb-5">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -375,7 +342,7 @@ export default function MenuPage() {
               placeholder="Search for dishes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-9 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400 transition-colors"
             />
             {search && (
               <button
@@ -386,13 +353,12 @@ export default function MenuPage() {
               </button>
             )}
           </div>
-
           <button
             onClick={() => setDrawerOpen(true)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors relative"
+            className="lg:hidden flex items-center gap-1.5 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors relative"
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
+            <span className="hidden sm:inline text-xs">Filters</span>
             {activeFilterCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
                 {activeFilterCount}
@@ -401,8 +367,8 @@ export default function MenuPage() {
           </button>
         </div>
 
-        {/* Mobile Category Pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-5 lg:hidden scrollbar-hide">
+        {/* Mobile Category Pills — horizontal scroll */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 lg:hidden scrollbar-hide">
           <button
             onClick={() => setSelectedCategory("")}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -428,7 +394,7 @@ export default function MenuPage() {
           ))}
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-5">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-52 shrink-0">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-6">
@@ -438,11 +404,9 @@ export default function MenuPage() {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-400">
-                {loading
-                  ? "Loading..."
-                  : `Showing ${pagination?.total ?? meals.length} items`}
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs sm:text-sm text-gray-400">
+                {loading ? "Loading..." : `Showing ${pagination?.total ?? meals.length} items`}
               </p>
               {activeFilterCount > 0 && (
                 <button
@@ -455,16 +419,15 @@ export default function MenuPage() {
             </div>
 
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
                 {error}
               </div>
             )}
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
+              /* Always 2 cols on mobile, up to 3 on lg */
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
               </div>
             ) : meals.length === 0 ? (
               <div className="text-center py-20">
@@ -481,7 +444,8 @@ export default function MenuPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              /* KEY FIX: always 2 cols on mobile, 3 on lg */
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {meals.map((meal) => (
                   <MealCard key={meal._id} meal={meal} />
                 ))}
@@ -490,7 +454,7 @@ export default function MenuPage() {
 
             {/* Pagination */}
             {!loading && pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-6 sm:mt-8">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
@@ -507,24 +471,18 @@ export default function MenuPage() {
                       Math.abs(p - currentPage) <= 1
                   )
                   .reduce<(number | "...")[]>((acc, p, i, arr) => {
-                    if (i > 0 && p - (arr[i - 1] as number) > 1)
-                      acc.push("...");
+                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
                     acc.push(p);
                     return acc;
                   }, [])
                   .map((p, i) =>
                     p === "..." ? (
-                      <span
-                        key={`e-${i}`}
-                        className="px-1 text-gray-400 text-sm"
-                      >
-                        …
-                      </span>
+                      <span key={`e-${i}`} className="px-1 text-gray-400 text-sm">…</span>
                     ) : (
                       <button
                         key={p}
                         onClick={() => setCurrentPage(p as number)}
-                        className={`w-9 h-9 rounded-xl text-sm font-medium transition ${
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-medium transition ${
                           currentPage === p
                             ? "bg-orange-500 text-white shadow-sm"
                             : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -551,15 +509,10 @@ export default function MenuPage() {
       {/* Mobile Filter Drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div
-            className="flex-1 bg-black/40"
-            onClick={() => setDrawerOpen(false)}
-          />
+          <div className="flex-1 bg-black/40" onClick={() => setDrawerOpen(false)} />
           <div className="w-72 bg-white h-full overflow-y-auto shadow-xl p-5 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">
-                Filters
-              </h2>
+              <h2 className="text-base font-semibold text-gray-900">Filters</h2>
               <button
                 onClick={() => setDrawerOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"

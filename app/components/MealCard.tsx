@@ -58,24 +58,18 @@ const TAG_COLORS: Record<string, string> = {
 const getTagColor = (name: string) =>
   TAG_COLORS[name] ?? "bg-gray-50 text-gray-500 border-gray-100";
 
-/**
- * MealCard with integrated cart functionality
- * Handles add/remove from cart with quantity control
- */
 export function MealCard({ meal }: { meal: Meal }) {
   const [showQuantity, setShowQuantity] = useState(false);
 
-  // Guard against undefined meal
   if (!meal || !meal._id) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p className="text-gray-500 text-center">Meal data unavailable</p>
       </div>
     );
   }
 
-  const { addToCart, removeFromCart, getQuantity, addingItems, error } =
-    useCart();
+  const { addToCart, removeFromCart, getQuantity, addingItems, error } = useCart();
 
   const quantity = getQuantity(meal._id);
   const isAdding = addingItems[meal._id];
@@ -85,13 +79,6 @@ export function MealCard({ meal }: { meal: Meal }) {
   const handleAddClick = async () => {
     await addToCart(meal._id, 1);
     setShowQuantity(true);
-  };
-
-  const handleRemove = async () => {
-    await removeFromCart(meal._id);
-    if (quantity <= 1) {
-      setShowQuantity(false);
-    }
   };
 
   const handleQuantityChange = async (newQty: number) => {
@@ -104,9 +91,9 @@ export function MealCard({ meal }: { meal: Meal }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
-      {/* Image */}
-      <div className="relative h-40 sm:h-36 bg-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all active:scale-[0.985] group h-full flex flex-col">
+      {/* Image Section — shorter on mobile, taller on desktop */}
+      <div className="relative h-32 sm:h-40 md:h-44 bg-gray-100 overflow-hidden flex-shrink-0">
         {meal.images?.[0]?.url ? (
           <img
             src={meal.images[0].url}
@@ -119,10 +106,10 @@ export function MealCard({ meal }: { meal: Meal }) {
           </div>
         )}
 
-        {/* Food type badge */}
+        {/* Food Type Badge */}
         {meal.foodType && (
           <span
-            className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-semibold text-white shadow-sm ${
+            className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-semibold text-white shadow-sm ${
               meal.foodType.name?.toLowerCase().includes("veg") &&
               !meal.foodType.name?.toLowerCase().includes("non")
                 ? "bg-green-500"
@@ -133,59 +120,70 @@ export function MealCard({ meal }: { meal: Meal }) {
           </span>
         )}
 
-        {/* Featured badge */}
+        {/* Featured */}
         {meal.isFeatured && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-400 text-white text-xs font-semibold rounded-full shadow-sm flex items-center gap-1">
-            <Star className="w-3 h-3 fill-white" /> Featured
+          <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-400 text-white text-[9px] font-semibold rounded-full shadow-sm flex items-center gap-0.5">
+            <Star className="w-2.5 h-2.5 fill-white" /> Featured
           </span>
         )}
 
-        {/* Discount badge */}
+        {/* Discount */}
         {hasDiscount && (
-          <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full shadow-sm">
+          <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
             {meal.discountPercentage}% OFF
           </span>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-3">
-        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-1">
+      <div className="p-2.5 sm:p-3 flex-1 flex flex-col">
+        {/* Name — 1 line on mobile, 2 on desktop */}
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-1 sm:line-clamp-2">
           {meal.name}
         </h3>
-        <p className="text-xs text-gray-400 mt-1 line-clamp-2 leading-relaxed">
+
+        {/* Description — hidden on mobile, visible on sm+ */}
+        <p className="hidden sm:block text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed flex-1">
           {meal.description}
         </p>
 
-        {/* Meta row */}
-        <div className="flex items-center gap-3 mt-2">
+        {/* Meta Info — compact on mobile */}
+        <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[10px] sm:text-xs flex-wrap">
           {(meal.averageRating ?? 0) > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-amber-500 font-medium">
+            <span className="flex items-center gap-0.5 text-amber-500 font-medium">
               <Star className="w-3 h-3 fill-amber-400" />
               {meal.averageRating?.toFixed(1)}
             </span>
           )}
           {(meal.preparationTime ?? 0) > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-gray-400">
+            <span className="flex items-center gap-0.5 text-gray-400">
               <Clock className="w-3 h-3" />
               {meal.preparationTime}m
             </span>
           )}
           {(meal.calories ?? 0) > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-gray-400">
+            <span className="flex items-center gap-0.5 text-gray-400">
               <Flame className="w-3 h-3" />
-              {meal.calories} kcal
+              {meal.calories}
             </span>
           )}
         </div>
 
-        {/* Tags */}
+        {/* Tags — max 1 on mobile, max 3 on sm+ */}
         {meal.tags && meal.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {meal.tags.slice(0, 3).map((tag) => (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {meal.tags.slice(0, 1).map((tag) => (
               <span
                 key={tag._id}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getTagColor(tag.name)}`}
+                className={`sm:hidden px-1.5 py-0.5 rounded-full text-[9px] font-medium border ${getTagColor(tag.name)}`}
+              >
+                {tag.name}
+              </span>
+            ))}
+            {meal.tags.slice(0, 3).map((tag) => (
+              <span
+                key={`d-${tag._id}`}
+                className={`hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium border ${getTagColor(tag.name)}`}
               >
                 {tag.name}
               </span>
@@ -193,59 +191,62 @@ export function MealCard({ meal }: { meal: Meal }) {
           </div>
         )}
 
-        {/* Price + Add */}
-        <div className="flex items-center justify-between mt-3">
-          <div>
-            <span className="text-sm font-bold text-orange-500">₹{displayPrice}</span>
+        {/* Price & Cart Controls */}
+        <div className="mt-auto pt-2.5 sm:pt-3 flex items-center justify-between gap-1">
+          {/* Price block */}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm sm:text-base font-bold text-orange-600 leading-tight">
+              ₹{displayPrice}
+            </span>
             {hasDiscount && (
-              <span className="text-xs text-gray-400 line-through ml-1.5">
+              <span className="text-[10px] text-gray-400 line-through leading-tight">
                 ₹{meal.price}
               </span>
             )}
           </div>
 
-          {/* Cart Controls */}
+          {/* Cart Button / Quantity */}
           {quantity === 0 ? (
             <button
               onClick={handleAddClick}
               disabled={isAdding || !meal.isAvailable}
-              className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-orange-500 text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex-shrink-0"
             >
               {isAdding ? (
                 <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
               ) : (
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
               )}
               Add
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 bg-orange-50 rounded-lg px-2 py-1.5 border border-orange-200">
+            <div className="flex items-center gap-1 bg-orange-50 rounded-xl px-1.5 py-1 border border-orange-200 flex-shrink-0">
               <button
                 onClick={() => handleQuantityChange(quantity - 1)}
                 disabled={isAdding}
-                className="text-orange-600 hover:text-orange-700 disabled:opacity-50 transition"
+                className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-orange-600 hover:bg-orange-100 rounded-lg transition disabled:opacity-50"
               >
-                <Minus className="w-3.5 h-3.5" />
+                <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </button>
-              <span className="text-sm font-semibold text-orange-700 w-6 text-center">
+              <span className="font-semibold text-orange-700 w-5 text-center text-xs sm:text-sm">
                 {quantity}
               </span>
               <button
                 onClick={() => handleQuantityChange(quantity + 1)}
                 disabled={isAdding}
-                className="text-orange-600 hover:text-orange-700 disabled:opacity-50 transition"
+                className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-orange-600 hover:bg-orange-100 rounded-lg transition disabled:opacity-50"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Error message */}
+        {/* Error */}
         {error && (
-          <div className="mt-2 flex items-center gap-1.5 p-2 bg-red-50 rounded-lg border border-red-200">
+          <div className="mt-1.5 flex items-center gap-1 p-1.5 bg-red-50 rounded-lg border border-red-200">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
-            <p className="text-xs text-red-600 leading-tight">{error}</p>
+            <p className="text-[10px] text-red-600 line-clamp-1">{error}</p>
           </div>
         )}
       </div>
