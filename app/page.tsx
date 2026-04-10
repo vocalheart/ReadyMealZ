@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 // ── SVG Icons ──
 const ClockIcon = () => (
@@ -99,6 +99,10 @@ interface Ad {
 function HeroSlider() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [current, setCurrent] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetch("https://readymealzbackend.onrender.com/api/admin/ads/public/active")
@@ -113,75 +117,128 @@ function HeroSlider() {
   }, []);
 
   const goTo = useCallback(
-    (index: number) => setCurrent((index + ads.length) % ads.length),
-    [ads.length]
+    (index: number) => {
+      if (isAnimating) return;
+      setIsAnimating(true);
+      setCurrent((index + ads.length) % ads.length);
+      setTimeout(() => setIsAnimating(false), 500);
+    },
+    [ads.length, isAnimating]
   );
 
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (ads.length > 1) {
+      timerRef.current = setInterval(() => {
+        setCurrent((prev) => (prev + 1) % ads.length);
+      }, 4000);
+    }
+  }, [ads.length]);
+
   useEffect(() => {
-    if (ads.length <= 1) return;
-    const timer = setInterval(() => goTo(current + 1), 3500);
-    return () => clearInterval(timer);
-  }, [ads.length, current, goTo]);
+    resetTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [resetTimer]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        goTo(current + 1);
+      } else {
+        goTo(current - 1);
+      }
+      resetTimer();
+    }
+  };
 
   if (ads.length === 0) return null;
 
   const ad = ads[current];
 
   return (
-    <section className="relative w-full overflow-hidden bg-gray-900">
-      <div className="relative h-48 sm:h-64 md:h-80 lg:h-96 w-full">
-        {/* Slide image */}
-        <img
-          key={ad._id}
-          src={ad.image}
-          alt={ad.title}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-        />
+    <section className="w-full bg-black select-none">
+      {/* Slider track */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ aspectRatio: "16/6" }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Render all slides, show active */}
+        {ads.map((item, i) => (
+          <div
+            key={item._id}
+            className={`absolute inset-0 transition-opacity duration-500 ${
+              i === current ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            <img
+              src={item.image}
+              alt={item.title}
+              className="w-full h-full object-cover object-center"
+              draggable={false}
+            />
+            {/* Bottom gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+          </div>
+        ))}
 
-        {/* Bottom gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-        {/* Title — bottom left */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 pt-8">
-          <h2 className="text-white text-base sm:text-lg md:text-xl font-semibold drop-shadow">
+        {/* Title overlay — bottom */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 sm:px-8 pb-4 sm:pb-6">
+          <p className="text-white text-sm sm:text-base md:text-lg font-semibold tracking-wide drop-shadow-md line-clamp-1">
             {ad.title}
-          </h2>
+          </p>
         </div>
 
-        {/* Prev / Next arrows */}
+        {/* Arrows — desktop only */}
         {ads.length > 1 && (
           <>
             <button
-              onClick={() => goTo(current - 1)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition"
+              onClick={() => { goTo(current - 1); resetTimer(); }}
+              className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white items-center justify-center transition-all hover:scale-110"
               aria-label="Previous"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
-              onClick={() => goTo(current + 1)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition"
+              onClick={() => { goTo(current + 1); resetTimer(); }}
+              className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white items-center justify-center transition-all hover:scale-110"
               aria-label="Next"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </>
         )}
+
+        {/* Slide counter badge — top right */}
+        {ads.length > 1 && (
+          <div className="absolute top-3 right-4 z-20 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full font-medium">
+            {current + 1} / {ads.length}
+          </div>
+        )}
       </div>
 
       {/* Dot indicators */}
       {ads.length > 1 && (
-        <div className="flex justify-center gap-2 py-3 bg-gray-900">
+        <div className="flex justify-center items-center gap-1.5 py-2.5 bg-black">
           {ads.map((_, i) => (
             <button
               key={i}
-              onClick={() => goTo(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === current ? "bg-orange-500 w-6" : "w-2.5 bg-white/40 hover:bg-white/60"
+              onClick={() => { goTo(i); resetTimer(); }}
+              className={`rounded-full transition-all duration-300 ${
+                i === current
+                  ? "bg-orange-500 w-5 h-1.5"
+                  : "w-1.5 h-1.5 bg-white/35 hover:bg-white/60"
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -231,12 +288,12 @@ export default function Home() {
     <main className="bg-[#FFF8F0]">
 
       {/* ── ANNOUNCEMENT BAR ── */}
-      <div className="bg-orange-500 text-white text-center py-2 px-4 text-xs sm:text-xs font-medium">
+      <div className="bg-orange-500 text-white text-center py-2 px-4 text-xs font-medium">
         🍱 <strong>New:</strong> Explore all platform features and screens –{" "}
         <a href="#" className="underline font-semibold">View Feature Tour</a>
       </div>
 
-      {/* ── HERO SLIDER (API-driven) ── */}
+      {/* ── HERO SLIDER ── */}
       <HeroSlider />
 
       {/* ── HERO ── */}
@@ -253,10 +310,13 @@ export default function Home() {
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Link href="/subscribe" className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 font-semibold text-sm sm:text-base">
-              Start Subscription <ArrowRightIcon />
+              Start Tiffin Subscription <ArrowRightIcon />
             </Link>
             <Link href="/menu" className="border border-gray-300 bg-white px-6 py-3 rounded-lg hover:bg-gray-50 transition font-semibold text-gray-700 text-sm sm:text-base text-center">
-              View Menu
+              View Meals
+            </Link>
+            <Link href="/bulk-order" className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 font-semibold text-sm sm:text-base">
+              Bulk-Order <ArrowRightIcon />
             </Link>
           </div>
           <div className="mt-8 grid grid-cols-3 gap-3 sm:flex sm:gap-8">
@@ -277,116 +337,19 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="order-1 md:order-2">
-          <img
-            src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
-            className="rounded-2xl shadow-xl w-full object-cover h-56 sm:h-72 md:h-[420px] lg:h-[460px]"
-            alt="Homemade meal"
-          />
-        </div>
+       
       </section>
 
       {/* ── TODAY'S MENU ── */}
       <section className="bg-gray-50 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900">Today's Menu</h2>
-          <p className="text-center text-gray-500 mt-2 text-sm sm:text-base">Freshly prepared with premium ingredients</p>
-          <div className="flex justify-center mt-6">
-            <div className="bg-white border border-gray-200 rounded-full p-1 flex gap-1 shadow-sm">
-              {(["lunch", "dinner"] as const).map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-2 px-5 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab ? "bg-orange-500 text-white shadow" : "text-gray-500 hover:text-gray-800"
-                  }`}
-                >
-                  {tab === "lunch" ? <SunIcon /> : <MoonIcon />}
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 sm:mt-10">
-            {menuItems.map((item) => (
-              <div key={item.name} className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow duration-200 hover:-translate-y-0.5 transition-transform">
-                <div className="relative">
-                  <img src={item.img} className="h-40 sm:h-44 w-full object-cover" alt={item.name} />
-                  <span className={`absolute top-2 right-2 ${item.tag === "Veg" ? "bg-green-500" : "bg-red-500"} text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1`}>
-                    {item.tag === "Veg" && <LeafIcon />}{item.tag}
-                  </span>
-                </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{item.name}</h3>
-                  <p className="text-gray-500 text-xs sm:text-sm mt-1 line-clamp-2">{item.desc}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-orange-500 font-bold text-sm sm:text-base">{item.price}</span>
-                    <button className="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-orange-600 transition">Add</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+       
           <div className="text-center mt-8">
             <Link href="/menu" className="border border-gray-300 px-6 py-2.5 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 transition inline-flex items-center gap-2">
               View Full Menu <ArrowRightIcon />
             </Link>
           </div>
-        </div>
       </section>
-
-      {/* ── SUBSCRIPTION PLANS ── */}
-      <section className="py-12 sm:py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900">Subscription Plans</h2>
-          <p className="text-center text-gray-500 mt-2 text-sm sm:text-base">Choose a plan that fits your lifestyle</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mt-10">
-            {plans.map((plan) => (
-              <div key={plan.days} className={`relative rounded-2xl p-5 sm:p-6 border-2 bg-white ${plan.popular ? "border-orange-500 shadow-xl" : "border-gray-100 shadow"}`}>
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">⭐ Most Popular</span>
-                  </div>
-                )}
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-extrabold text-orange-500">{plan.price}</div>
-                  <div className="text-gray-500 text-xs sm:text-sm">per meal</div>
-                  <div className="font-bold text-base sm:text-lg mt-2 text-gray-900">{plan.days}</div>
-                </div>
-                <ul className="mt-4 space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2"><CheckIcon />{plan.meals} meals included</li>
-                  <li className="flex items-center gap-2"><CheckIcon />Free delivery</li>
-                  <li className="flex items-center gap-2"><CheckIcon />Skip / Pause anytime</li>
-                  {plan.savings && <li className="flex items-center gap-2"><CheckIcon /><span className="text-green-600 font-semibold">{plan.savings}</span></li>}
-                </ul>
-                <div className="mt-4 text-center text-gray-400 text-sm">Total: {plan.total}</div>
-                <button className={`mt-4 w-full py-2.5 rounded-lg font-semibold text-sm transition ${plan.popular ? "bg-orange-500 text-white hover:bg-orange-600" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
-                  Subscribe Now
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BROWSE BY CATEGORY ── */}
-      <section className="py-12 sm:py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900">Browse by Category</h2>
-          <p className="text-center text-gray-500 mt-2 text-sm sm:text-base">Explore our diverse menu options</p>
-          <div className="flex overflow-x-auto md:flex-wrap md:justify-center gap-3 sm:gap-4 mt-8 sm:mt-10 pb-2 md:pb-0 scrollbar-hide">
-            {categories.map((cat) => (
-              <button key={cat.label} onClick={() => setActiveCategory(cat.label)}
-                className={`flex flex-col items-center gap-2 px-5 sm:px-8 py-3 sm:py-4 rounded-xl border-2 transition flex-shrink-0 ${
-                  activeCategory === cat.label ? "border-orange-500 bg-white shadow text-orange-500" : "border-gray-200 bg-white hover:border-orange-300 text-gray-500"
-                }`}
-              >
-                {cat.icon}
-                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
+     
       {/* ── BULK ORDERS CTA ── */}
       <section className="bg-orange-500 py-12 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
