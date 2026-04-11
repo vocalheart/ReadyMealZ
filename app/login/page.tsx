@@ -32,8 +32,7 @@ const EyeIcon = () => (
 interface LoginForm {
   identifier: string;
   password: string;
-}
-
+};
 interface User {
   _id: string;
   name: string;
@@ -54,30 +53,24 @@ interface LoginResponse {
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const [form, setForm] = useState<LoginForm>({
     identifier: "",
     password: "",
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
-
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-
     try {
       setLoading(true);
-
       const res = await api.post<LoginResponse>(
         "/user/login",
         {

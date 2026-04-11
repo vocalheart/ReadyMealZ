@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../hooks/useCart";
 import {Trash2,ShoppingCart,ArrowLeft,Loader,Plus,Minus,AlertCircle,Check,TrendingDown} from "lucide-react";
-
+import ProtectedRoute from "../components/ProtectedRoute";
 /**
  * Cart Page Component - Enhanced UI/UX
  * Fully responsive with mobile-first design (10px minimum text)
@@ -77,6 +77,7 @@ export default function CartPage() {
   };
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header */}
@@ -364,5 +365,6 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

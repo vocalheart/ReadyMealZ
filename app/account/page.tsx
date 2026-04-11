@@ -8,7 +8,7 @@ import { setUser, logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
 import { toast } from "react-toastify";
 import {User,Mail, Phone,Lock,LogOut,Edit2,Save,X,Eye,EyeOff,Shield,CheckCircle,AlertCircle,Loader} from "lucide-react";
-
+import ProtectedRoute from "../components/ProtectedRoute";
 interface UpdateForm {
   name: string;
   email: string;
@@ -211,6 +211,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pb-8 sm:pb-12">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
         {/* Header */}
@@ -596,5 +597,6 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+    </ProtectedRoute>
   );
 }

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {ShoppingBag,ArrowRight,Loader,AlertCircle,Calendar,Package,CheckCircle,Truck,Search,Clock,MapPin,CreditCard} from "lucide-react";
 import api from "../lib/axios";
-
+import ProtectedRoute from "../components/ProtectedRoute";
 interface OrderItem {
   meal: {
     name: string;
@@ -213,6 +213,7 @@ export default function OrdersPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header Section */}
@@ -572,5 +573,6 @@ export default function OrdersPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

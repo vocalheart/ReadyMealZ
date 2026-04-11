@@ -15,11 +15,9 @@ export default function AuthLoader({
     const fetchUser = async () => {
       try {
         dispatch(setLoading(true));
-
         const res = await api.get("/user/me", {
           withCredentials: true, //  cookie auth
         });
-
         if (res.data?.success) {
           dispatch(setUser(res.data.user));
         } else {
