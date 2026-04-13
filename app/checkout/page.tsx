@@ -235,9 +235,9 @@ export default function CheckoutPage() {
 
   const paymentMethods = [
     { id: "cod", label: "Cash on Delivery", description: "Pay when order arrives", icon: Wallet },
-    { id: "online", label: "Credit/Debit Card", description: "Secure online payment", icon: CreditCard },
-    { id: "upi", label: "UPI Payment", description: "Google Pay, PhonePe, etc.", icon: Smartphone },
-    { id: "wallet", label: "Digital Wallet", description: "Use wallet balance", icon: Wallet },
+    { id: "online", label: "Upi/Credit/Debit Card", description: "Secure online payment", icon: CreditCard },
+    // { id: "upi", label: "UPI Payment", description: "Google Pay, PhonePe, etc.", icon: Smartphone },
+    // { id: "wallet", label: "Digital Wallet", description: "Use wallet balance", icon: Wallet },
   ];
 
   const steps = ["address", "payment", "review"];

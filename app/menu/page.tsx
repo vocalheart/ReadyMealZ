@@ -327,7 +327,7 @@ export default function MenuPage() {
 
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Our Menu</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Our Meals Menu</h1>
           <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
             Explore our delicious range of homemade meals
           </p>
@@ -343,7 +343,7 @@ export default function MenuPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400 transition-colors"
-            />
+            />           
             {search && (
               <button
                 onClick={() => setSearch("")}

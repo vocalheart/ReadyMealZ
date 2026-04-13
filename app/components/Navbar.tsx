@@ -120,11 +120,11 @@ function Navbar() {
   };
 
   const navItems = [
-    { href: "/menu", label: "Menu", icon: FiHome },
-    ...(isLoggedIn ? [{ href: "/orders", label: "Orders", icon: FiPackage }] : []),
-    { href: "/subscribe", label: "Subscribe", icon: FiTrendingUp },
+    { href: "/menu", label: "Meals", icon: FiHome },
+    // ...(isLoggedIn ? [{ href: "/orders", label: "Orders", icon: FiPackage }] : []),
+    { href: "/tiffinservices", label: "Tiffin Services", icon: FiTrendingUp },
     { href: "/bulk-order", label: "Bulk Order", icon: FiTrendingUp },
-    { href: "/features", label: "Features", icon: FiHelpCircle },
+    // { href: "/features", label: "Features", icon: FiHelpCircle },
   ];
 
   if (loading) return null;
