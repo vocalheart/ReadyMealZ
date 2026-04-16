@@ -205,7 +205,7 @@ export default function OrdersPage() {
             <Loader className="w-8 h-8 text-orange-500 animate-spin" />
           </div>
           <p className="text-gray-600 font-medium text-xs sm:text-base">
-            Loading your orders...
+            Loading
           </p>
         </div>
       </div>
