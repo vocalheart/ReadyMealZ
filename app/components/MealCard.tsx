@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Plus, Minus, AlertCircle, Star, Clock, Flame } from "lucide-react";
 import { useCart } from "../hooks/useCart";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";   // ✅ Next.js correct import
 
 interface MealImage {
   url: string;
@@ -61,13 +63,8 @@ const getTagColor = (name: string) =>
 export function MealCard({ meal }: { meal: Meal }) {
   const [showQuantity, setShowQuantity] = useState(false);
 
-  if (!meal || !meal._id) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <p className="text-gray-500 text-center">Meal data unavailable</p>
-      </div>
-    );
-  }
+  const user = useSelector((state: any) => state.auth.user);
+  const router = useRouter();                    // ✅ Next.js Router
 
   const { addToCart, removeFromCart, getQuantity, addingItems, error } = useCart();
 
@@ -76,12 +73,28 @@ export function MealCard({ meal }: { meal: Meal }) {
   const hasDiscount = (meal.discountPercentage ?? 0) > 0;
   const displayPrice = hasDiscount ? meal.discountPrice : meal.price;
 
+  // Improved Login Redirect with Return URL
+  const redirectToLogin = () => {
+    const currentPath = window.location.pathname + window.location.search;
+    router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+  };
+
   const handleAddClick = async () => {
+    if (!user) {
+      redirectToLogin();
+      return;
+    }
+
     await addToCart(meal._id, 1);
     setShowQuantity(true);
   };
 
   const handleQuantityChange = async (newQty: number) => {
+    if (!user) {
+      redirectToLogin();
+      return;
+    }
+
     if (newQty <= 0) {
       await removeFromCart(meal._id);
       setShowQuantity(false);
@@ -90,9 +103,17 @@ export function MealCard({ meal }: { meal: Meal }) {
     }
   };
 
+  if (!meal || !meal._id) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p className="text-gray-500 text-center">Meal data unavailable</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all active:scale-[0.985] group h-full flex flex-col">
-      {/* Image Section — shorter on mobile, taller on desktop */}
+      {/* Image Section */}
       <div className="relative h-32 sm:h-40 md:h-44 bg-gray-100 overflow-hidden flex-shrink-0">
         {meal.images?.[0]?.url ? (
           <img
@@ -106,7 +127,6 @@ export function MealCard({ meal }: { meal: Meal }) {
           </div>
         )}
 
-        {/* Food Type Badge */}
         {meal.foodType && (
           <span
             className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-semibold text-white shadow-sm ${
@@ -120,14 +140,12 @@ export function MealCard({ meal }: { meal: Meal }) {
           </span>
         )}
 
-        {/* Featured */}
         {meal.isFeatured && (
           <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-400 text-white text-[9px] font-semibold rounded-full shadow-sm flex items-center gap-0.5">
             <Star className="w-2.5 h-2.5 fill-white" /> Featured
           </span>
         )}
 
-        {/* Discount */}
         {hasDiscount && (
           <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
             {meal.discountPercentage}% OFF
@@ -137,17 +155,14 @@ export function MealCard({ meal }: { meal: Meal }) {
 
       {/* Content */}
       <div className="p-2.5 sm:p-3 flex-1 flex flex-col">
-        {/* Name — 1 line on mobile, 2 on desktop */}
         <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-1 sm:line-clamp-2">
           {meal.name}
         </h3>
 
-        {/* Description — hidden on mobile, visible on sm+ */}
         <p className="hidden sm:block text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed flex-1">
           {meal.description}
         </p>
 
-        {/* Meta Info — compact on mobile */}
         <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[10px] sm:text-xs flex-wrap">
           {(meal.averageRating ?? 0) > 0 && (
             <span className="flex items-center gap-0.5 text-amber-500 font-medium">
@@ -169,7 +184,6 @@ export function MealCard({ meal }: { meal: Meal }) {
           )}
         </div>
 
-        {/* Tags — max 1 on mobile, max 3 on sm+ */}
         {meal.tags && meal.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {meal.tags.slice(0, 1).map((tag) => (
@@ -193,7 +207,6 @@ export function MealCard({ meal }: { meal: Meal }) {
 
         {/* Price & Cart Controls */}
         <div className="mt-auto pt-2.5 sm:pt-3 flex items-center justify-between gap-1">
-          {/* Price block */}
           <div className="flex flex-col min-w-0">
             <span className="text-sm sm:text-base font-bold text-orange-600 leading-tight">
               ₹{displayPrice}
@@ -205,7 +218,6 @@ export function MealCard({ meal }: { meal: Meal }) {
             )}
           </div>
 
-          {/* Cart Button / Quantity */}
           {quantity === 0 ? (
             <button
               onClick={handleAddClick}
@@ -242,7 +254,6 @@ export function MealCard({ meal }: { meal: Meal }) {
           )}
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mt-1.5 flex items-center gap-1 p-1.5 bg-red-50 rounded-lg border border-red-200">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />

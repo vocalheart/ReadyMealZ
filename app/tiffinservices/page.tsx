@@ -15,6 +15,10 @@ import {
   Sprout,
   FlameKindling,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+
 
 /* ─── Types ─────────────────────────────────── */
 type TiffinService = {
@@ -71,7 +75,9 @@ export default function TiffinPage() {
   const [tiffins, setTiffins] = useState<TiffinService[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const router = useRouter();
 
+  const user = useSelector((state: any) => state.auth.user);
   useEffect(() => {
     const fetchTiffins = async () => {
       try {
@@ -93,14 +99,14 @@ export default function TiffinPage() {
     selectedCategory === "all"
       ? tiffins
       : tiffins.filter((t) =>
-          selectedCategory === "vegetarian"
-            ? t.dietary.isVegetarian
-            : selectedCategory === "vegan"
+        selectedCategory === "vegetarian"
+          ? t.dietary.isVegetarian
+          : selectedCategory === "vegan"
             ? t.dietary.isVegan
             : selectedCategory === "jain"
-            ? t.dietary.isJain
-            : true
-        );
+              ? t.dietary.isJain
+              : true
+      );
 
   const trustBadges = [
     {
@@ -161,11 +167,10 @@ export default function TiffinPage() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all ${
-                  selectedCategory === cat.id
-                    ? "bg-orange-500 text-white shadow-md"
-                    : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300"
-                }`}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all ${selectedCategory === cat.id
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300"
+                  }`}
               >
                 {cat.label}
               </button>
@@ -206,9 +211,8 @@ export default function TiffinPage() {
 
                   {/* Availability Badge */}
                   <div
-                    className={`absolute top-3 right-3 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold text-white ${
-                      service.service.isAvailable ? "bg-green-500" : "bg-red-500"
-                    }`}
+                    className={`absolute top-3 right-3 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold text-white ${service.service.isAvailable ? "bg-green-500" : "bg-red-500"
+                      }`}
                   >
                     {service.service.isAvailable ? "Available" : "Unavailable"}
                   </div>
@@ -279,11 +283,19 @@ export default function TiffinPage() {
                   {/* Subscribe Button */}
                   <button
                     disabled={!service.service.isAvailable}
-                    className={`w-full font-semibold py-2.5 sm:py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-xs sm:text-sm ${
-                      service.service.isAvailable
+                    onClick={() => {
+                      if (!service.service.isAvailable) return;
+                      if (!user) {
+                        router.push("/login");
+                        return;
+                      }
+
+                      router.push(`/tiffin/${service._id}?subscribe=true`);
+                    }}
+                    className={`w-full font-semibold py-2.5 sm:py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-xs sm:text-sm ${service.service.isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 text-white hover:shadow-md active:scale-95"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     {service.service.isAvailable ? (
                       <>
