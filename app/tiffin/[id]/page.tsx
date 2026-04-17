@@ -392,7 +392,7 @@ function StepAddress({
         <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
           <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm mb-4">No saved addresses found</p>
-          <Link href="/profile/addresses" className="text-orange-600 font-semibold text-sm hover:underline">
+          <Link href="/address" className="text-orange-600 font-semibold text-sm hover:underline">
             + Add Address
           </Link>
         </div>
