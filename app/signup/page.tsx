@@ -5,40 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import api from "../lib/axios";
-import chefImage from "../../public/auth-chef.png"; // your image
+import chefImage from "../../public/auth-chef.png";
+import { User, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
 
-// Icons (kept your SVGs)
-const UserIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-
-const EmailIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-  </svg>
-);
-
-const PhoneIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h2l2 5-2 1a11 11 0 005 5l1-2 5 2v2a2 2 0 01-2 2h-1C8 21 3 16 3 9V5z" />
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-5a2 2 0 00-2-2H6a2 2 0 00-2 2v5a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0" />
-    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-  </svg>
-);
-
+/* ─── Types ─────────────────────────────────── */
 interface SignupForm {
   name: string;
   email: string;
@@ -47,6 +17,7 @@ interface SignupForm {
   confirmPassword: string;
 }
 
+/* ─── Main Page ──────────────────────────────── */
 export default function SignupPage() {
   const router = useRouter();
 
@@ -77,14 +48,12 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-
       const res = await api.post("/user/signup", form);
 
       if (!res.data.success) {
         throw new Error(res.data.message || "Signup failed");
       }
 
-      // Optional: you might want to use cookies or redux here instead of localStorage
       localStorage.setItem("user", JSON.stringify(res.data.user));
       router.push("/login");
     } catch (err: any) {
@@ -96,7 +65,8 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {/* LEFT - Illustration Section (hidden on mobile) */}
+
+      {/* LEFT - Illustration (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center bg-gradient-to-br from-green-50 to-orange-50 overflow-hidden">
         <div className="absolute top-8 left-8 md:top-12 md:left-12 z-10">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
@@ -130,6 +100,7 @@ export default function SignupPage() {
             Start your healthy meal journey today
           </p>
 
+          {/* Error */}
           {error && (
             <div className="bg-red-50 text-red-700 text-sm p-3.5 rounded-xl mb-6 border border-red-200">
               {error}
@@ -137,9 +108,10 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSignup} className="space-y-4 sm:space-y-5">
+
             {/* Name */}
             <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
-              <span className="text-gray-400 mr-3"><UserIcon /></span>
+              <User className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type="text"
                 name="name"
@@ -153,7 +125,7 @@ export default function SignupPage() {
 
             {/* Email */}
             <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
-              <span className="text-gray-400 mr-3"><EmailIcon /></span>
+              <Mail className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type="email"
                 name="email"
@@ -167,7 +139,7 @@ export default function SignupPage() {
 
             {/* Mobile */}
             <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
-              <span className="text-gray-400 mr-3"><PhoneIcon /></span>
+              <Phone className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type="tel"
                 name="mobile"
@@ -181,7 +153,7 @@ export default function SignupPage() {
 
             {/* Password */}
             <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
-              <span className="text-gray-400 mr-3"><LockIcon /></span>
+              <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -194,15 +166,20 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="ml-2 text-gray-500 hover:text-gray-700"
+                className="ml-2 text-gray-400 hover:text-orange-600 transition flex-shrink-0"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                <EyeIcon />
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
 
             {/* Confirm Password */}
             <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-300 focus-within:border-orange-300 transition">
-              <span className="text-gray-400 mr-3"><LockIcon /></span>
+              <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type="password"
                 name="confirmPassword"
@@ -214,7 +191,7 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -225,12 +202,12 @@ export default function SignupPage() {
 
             {/* Divider */}
             <div className="flex items-center gap-4 my-4 sm:my-6">
-              <div className="flex-1 h-px bg-gray-200"></div>
+              <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs sm:text-sm text-gray-400 font-medium">OR</span>
-              <div className="flex-1 h-px bg-gray-200"></div>
+              <div className="flex-1 h-px bg-gray-200" />
             </div>
 
-            {/* Google Button (placeholder – implement real OAuth later) */}
+            {/* Google Button */}
             <button
               type="button"
               className="w-full border border-gray-200 py-3.5 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition text-sm sm:text-base font-medium disabled:opacity-50"
