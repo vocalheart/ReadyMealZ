@@ -290,7 +290,7 @@ export default function TiffinPage() {
                         return;
                       }
 
-                      router.push(`/tiffin/${service._id}?subscribe=true`);
+                      router.push(`/tiffin/${service._id}`);
                     }}
                     className={`w-full font-semibold py-2.5 sm:py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-xs sm:text-sm ${service.service.isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 text-white hover:shadow-md active:scale-95"
