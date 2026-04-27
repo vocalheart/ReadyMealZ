@@ -64,7 +64,7 @@ export function MealCard({ meal }: { meal: Meal }) {
   const [showQuantity, setShowQuantity] = useState(false);
 
   const user = useSelector((state: any) => state.auth.user);
-  const router = useRouter();                    // ✅ Next.js Router
+  const router = useRouter();                    // Next.js Router
 
   const { addToCart, removeFromCart, getQuantity, addingItems, error } = useCart();
 
@@ -84,17 +84,14 @@ export function MealCard({ meal }: { meal: Meal }) {
       redirectToLogin();
       return;
     }
-
     await addToCart(meal._id, 1);
     setShowQuantity(true);
   };
-
   const handleQuantityChange = async (newQty: number) => {
     if (!user) {
       redirectToLogin();
       return;
     }
-
     if (newQty <= 0) {
       await removeFromCart(meal._id);
       setShowQuantity(false);
@@ -102,7 +99,6 @@ export function MealCard({ meal }: { meal: Meal }) {
       await addToCart(meal._id, newQty - quantity);
     }
   };
-
   if (!meal || !meal._id) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
@@ -110,7 +106,6 @@ export function MealCard({ meal }: { meal: Meal }) {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all active:scale-[0.985] group h-full flex flex-col">
       {/* Image Section */}
@@ -126,7 +121,6 @@ export function MealCard({ meal }: { meal: Meal }) {
             <span className="text-4xl">🍽️</span>
           </div>
         )}
-
         {meal.foodType && (
           <span
             className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-semibold text-white shadow-sm ${
@@ -139,30 +133,25 @@ export function MealCard({ meal }: { meal: Meal }) {
             {meal.foodType.name}
           </span>
         )}
-
         {meal.isFeatured && (
           <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-400 text-white text-[9px] font-semibold rounded-full shadow-sm flex items-center gap-0.5">
             <Star className="w-2.5 h-2.5 fill-white" /> Featured
           </span>
         )}
-
         {hasDiscount && (
           <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
             {meal.discountPercentage}% OFF
           </span>
         )}
       </div>
-
       {/* Content */}
       <div className="p-2.5 sm:p-3 flex-1 flex flex-col">
         <h3 className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-1 sm:line-clamp-2">
           {meal.name}
         </h3>
-
         <p className="hidden sm:block text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed flex-1">
           {meal.description}
         </p>
-
         <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[10px] sm:text-xs flex-wrap">
           {(meal.averageRating ?? 0) > 0 && (
             <span className="flex items-center gap-0.5 text-amber-500 font-medium">
@@ -183,7 +172,6 @@ export function MealCard({ meal }: { meal: Meal }) {
             </span>
           )}
         </div>
-
         {meal.tags && meal.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {meal.tags.slice(0, 1).map((tag) => (
@@ -204,7 +192,6 @@ export function MealCard({ meal }: { meal: Meal }) {
             ))}
           </div>
         )}
-
         {/* Price & Cart Controls */}
         <div className="mt-auto pt-2.5 sm:pt-3 flex items-center justify-between gap-1">
           <div className="flex flex-col min-w-0">
@@ -217,7 +204,6 @@ export function MealCard({ meal }: { meal: Meal }) {
               </span>
             )}
           </div>
-
           {quantity === 0 ? (
             <button
               onClick={handleAddClick}

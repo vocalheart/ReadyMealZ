@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../../public/logoreadymealz.jpeg";
+import logo from "../../public/logoreadymealz";
 import {
   MapPin,
   Phone,
@@ -42,7 +42,7 @@ export default function Footer() {
       href: "https://instagram.com",
       icon: Instagram,
       color: "hover:text-pink-600",
-    },
+    }, 
     {
       label: "Twitter",
       href: "https://twitter.com",
