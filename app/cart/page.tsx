@@ -184,7 +184,6 @@ export default function CartPage() {
                           </div>
                         </div>
                       )}
-
                       {/* Item Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
@@ -217,13 +216,9 @@ export default function CartPage() {
                             <span className="w-6 text-center font-semibold text-gray-900 text-xs">
                               {item.quantity}
                             </span>
-                            <button
-                              onClick={() =>
-                                updateQuantity(item.meal._id, item.quantity + 1)
-                              }
+                            <button onClick={() =>updateQuantity(item.meal._id, item.quantity + 1)}
                               disabled={addingItems[item.meal._id] || removingItem === item.meal._id}
-                              className="p-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition"
-                            >
+                              className="p-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition">
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
@@ -253,17 +248,13 @@ export default function CartPage() {
                           <span className="w-8 text-center font-semibold text-gray-900">
                             {item.quantity}
                           </span>
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.meal._id, item.quantity + 1)
-                            }
+                          <button onClick={() => updateQuantity(item.meal._id, item.quantity + 1)}
                             disabled={addingItems[item.meal._id] || removingItem === item.meal._id}
                             className="p-1 text-gray-600 hover:text-gray-800 hover:bg-white rounded transition disabled:opacity-50"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
-
                         <button
                           onClick={() => handleRemoveItem(item.meal._id)}
                           disabled={addingItems[item.meal._id] || removingItem === item.meal._id}

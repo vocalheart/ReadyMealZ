@@ -33,7 +33,7 @@ interface OrderItem {
   totalPrice: number;
 }
 
-// ✅ Matches your Address.schema fields exactly
+// Matches your Address.schema fields exactly
 interface DeliveryAddress {
   _id: string;
   recipientName: string;
@@ -61,13 +61,13 @@ interface Order {
   paymentMethod: "cod" | "online" | "upi" | "wallet";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   orderStatus:
-    | "placed"
-    | "confirmed"
-    | "preparing"
-    | "ready"
-    | "out_for_delivery"
-    | "delivered"
-    | "cancelled";
+  | "placed"
+  | "confirmed"
+  | "preparing"
+  | "ready"
+  | "out_for_delivery"
+  | "delivered"
+  | "cancelled";
   deliveryAddress: DeliveryAddress;
   specialRequests?: string;
   createdAt: string;
@@ -269,7 +269,7 @@ export default function OrderDetailsPage() {
         </div>
       </div>
     );
-  }
+  };
 
   const statusInfo = statusConfig[order.orderStatus as keyof typeof statusConfig];
   const StatusIcon = statusInfo.icon;
@@ -336,21 +336,18 @@ export default function OrderDetailsPage() {
                   return (
                     <React.Fragment key={status}>
                       <div className="flex flex-col items-center flex-shrink-0">
-                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all ${
-                          isCompleted
-                            ? "bg-green-500 border-green-500"
-                            : "bg-white border-gray-300"
-                        } ${isCurrent ? "ring-2 ring-green-300 ring-offset-1" : ""}`} />
-                        <span className={`text-xs mt-1 hidden sm:block text-center max-w-[60px] leading-tight ${
-                          isCompleted ? "text-green-600 font-medium" : "text-gray-400"
-                        }`}>
+                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all ${isCompleted
+                          ? "bg-green-500 border-green-500"
+                          : "bg-white border-gray-300"
+                          } ${isCurrent ? "ring-2 ring-green-300 ring-offset-1" : ""}`} />
+                        <span className={`text-xs mt-1 hidden sm:block text-center max-w-[60px] leading-tight ${isCompleted ? "text-green-600 font-medium" : "text-gray-400"
+                          }`}>
                           {STATUS_LABELS[status]}
                         </span>
                       </div>
                       {idx < ORDER_STATUSES.length - 1 && (
-                        <div className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all ${
-                          currentStatusIdx > idx ? "bg-green-500" : "bg-gray-300"
-                        }`} />
+                        <div className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all ${currentStatusIdx > idx ? "bg-green-500" : "bg-gray-300"
+                          }`} />
                       )}
                     </React.Fragment>
                   );
@@ -374,29 +371,30 @@ export default function OrderDetailsPage() {
                 Order Items ({order.items.length})
               </h2>
               <div className="space-y-3 sm:space-y-4">
-                {order.items.map((item) => (
-                  <div key={item._id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
-                    {item.meal.images?.[0]?.url ? (
-                      <img
-                        src={item.meal.images[0].url}
-                        alt={item.meal.name}
-                        className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <Package className="w-6 h-6 text-gray-400" />
+                {order.items
+                  ?.filter((item) => item?.meal)
+                  ?.map((item) => (
+                    <div key={item._id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                      {item.meal.images?.[0]?.url ? (
+                        <img
+                          src={item?.meal?.images?.[0]?.url} alt={item?.meal?.name || "Meal unavailable"}
+                          className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-6 h-6 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2">{item?.meal?.name || "Meal unavailable"}</h3>
+                        <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
+                        <p className="text-xs sm:text-sm font-semibold text-orange-600 mt-1">₹{item.price} each</p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2">{item.meal.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
-                      <p className="text-xs sm:text-sm font-semibold text-orange-600 mt-1">₹{item.price} each</p>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-bold text-gray-900 text-xs sm:text-base">₹{item.totalPrice}</p>
+                      </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-gray-900 text-xs sm:text-base">₹{item.totalPrice}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
 
