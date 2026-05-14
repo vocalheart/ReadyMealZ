@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../../public/logoreadymealz";
+import logo from "../../public/logoreadymealz.jpeg";
 import {
   MapPin,
   Phone,

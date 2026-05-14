@@ -1,13 +1,4 @@
 
-
-
-
-
-
-
-
-
-
 import axios from 'axios';
 
 const instance = axios.create({
@@ -15,8 +6,7 @@ const instance = axios.create({
   baseURL: "https://api.a1meals.com/api",
   withCredentials: true,
 });
-
-export default instance;
+export default instance;  
 
 
 
