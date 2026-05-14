@@ -132,7 +132,7 @@ function FilterPanel({
                 onChange={() => setSelectedCategory(cat._id)}
                 className="accent-orange-500 w-3.5 h-3.5"
               />
-              <span className="text-sm text-gray-600">{cat.name}</span>
+              <span className="text-sm text-gray-600">{cat?.name || "Category"}</span>
               {cat.mealCount !== undefined && (
                 <span className="ml-auto text-xs text-gray-400">{cat.mealCount}</span>
               )}
@@ -167,7 +167,7 @@ function FilterPanel({
                   onChange={() => setSelectedFoodType(ft._id)}
                   className="accent-orange-500 w-3.5 h-3.5"
                 />
-                <span className="text-sm text-gray-600">{ft.name}</span>
+                <span className="text-sm text-gray-600">{ft?.name || "Food Type"}</span>
               </label>
             ))}
           </div>
@@ -189,7 +189,7 @@ function FilterPanel({
                   onChange={() => toggleTag(tag._id)}
                   className="accent-orange-500 w-3.5 h-3.5 rounded"
                 />
-                <span className="text-sm text-gray-600">{tag.name}</span>
+                <span className="text-sm text-gray-600">{tag?.name || "Tag"}</span>
               </label>
             ))}
           </div>
@@ -343,7 +343,7 @@ export default function MenuPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400 transition-colors"
-            />           
+            />
             {search && (
               <button
                 onClick={() => setSearch("")}
@@ -371,11 +371,10 @@ export default function MenuPage() {
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4 lg:hidden scrollbar-hide">
           <button
             onClick={() => setSelectedCategory("")}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              selectedCategory === ""
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === ""
                 ? "bg-orange-500 text-white border-orange-500"
                 : "bg-white text-gray-600 border-gray-200 hover:border-orange-300"
-            }`}
+              }`}
           >
             All Items
           </button>
@@ -383,11 +382,10 @@ export default function MenuPage() {
             <button
               key={cat._id}
               onClick={() => setSelectedCategory(cat._id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                selectedCategory === cat._id
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === cat._id
                   ? "bg-orange-500 text-white border-orange-500"
                   : "bg-white text-gray-600 border-gray-200 hover:border-orange-300"
-              }`}
+                }`}
             >
               {cat.name}
             </button>
@@ -446,9 +444,14 @@ export default function MenuPage() {
             ) : (
               /* KEY FIX: always 2 cols on mobile, 3 on lg */
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {meals.map((meal) => (
-                  <MealCard key={meal._id} meal={meal} />
-                ))}
+                {meals
+                  ?.filter((meal) => meal?._id)
+                  ?.map((meal) => (
+                    <MealCard
+                      key={meal?._id || Math.random()}
+                      meal={meal}
+                    />
+                  ))}
               </div>
             )}
 
@@ -482,11 +485,10 @@ export default function MenuPage() {
                       <button
                         key={p}
                         onClick={() => setCurrentPage(p as number)}
-                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-medium transition ${
-                          currentPage === p
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-medium transition ${currentPage === p
                             ? "bg-orange-500 text-white shadow-sm"
                             : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         {p}
                       </button>
