@@ -21,7 +21,7 @@ import { logoutUser } from "../redux/slices/authSlice";
 import api from "../lib/axios";
 import { useCart } from "../hooks/useCart";
 import Image from "next/image";
-import logo from "../../publiC/logoreadymealz.jpeg";
+import logo from "../../public/logoreadymealz.jpeg";
 
 function Navbar() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
