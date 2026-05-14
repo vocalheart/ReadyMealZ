@@ -120,7 +120,7 @@ export default function CartPage() {
               Cart cleared successfully!
             </p>
           </div>
-        )};
+        )}
         {/* Error Message */}
         {error && (
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl flex items-start justify-between gap-2">
