@@ -181,11 +181,18 @@ export default function OrdersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const getItemSummary = (items: OrderItem[]) => {
-    if (items.length === 0) return "No items";
-    if (items.length === 1) return `${items[0].meal.name}`;
-    return `${items[0].meal.name} + ${items.length - 1} more`;
-  };
+const getItemSummary = (items: OrderItem[]) => {
+  if (!items || items.length === 0) return "No items";
+
+  const firstMealName =
+    items?.[0]?.meal?.name || "Meal unavailable";
+
+  if (items.length === 1) {
+    return firstMealName;
+  }
+
+  return `${firstMealName} + ${items.length - 1} more`;
+};
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

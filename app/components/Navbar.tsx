@@ -3,18 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  FiMenu,
-  FiX,
-  FiMapPin,
-  FiShoppingCart,
-  FiUser,
-  FiLogOut,
-  FiChevronDown,
-  FiPackage,
-  FiHome,
-  FiTrendingUp,
-} from "react-icons/fi";
+import {FiMenu,FiX,FiMapPin,FiShoppingCart,FiUser,FiLogOut,FiChevronDown,FiPackage,FiHome,FiTrendingUp}from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { logoutUser } from "../redux/slices/authSlice";

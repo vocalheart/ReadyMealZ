@@ -163,9 +163,9 @@ export default function CartPage() {
               </div>
             ) : (
               <div className="space-y-2 sm:space-y-4">
-                {items.map((item) => (
+                {items?.filter(item => item?.meal)?.map((item) => (
                   <div
-                    key={item.meal._id}
+                    key={item?.meal?._id || Math.random()}
                     className={`bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden ${
                       removingItem === item.meal._id ? "opacity-50" : ""
                     }`}
@@ -175,8 +175,8 @@ export default function CartPage() {
                       {item.meal.images?.[0]?.url && (
                         <div className="relative flex-shrink-0">
                           <img
-                            src={item.meal.images[0].url}
-                            alt={item.meal.name}
+                            src={item?.meal?.images[0].url}
+                            alt={item?.meal?.name || "Meal unavailable"}
                             className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg object-cover"
                           />
                           <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
@@ -189,14 +189,14 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <h3 className="font-semibold text-gray-900 line-clamp-1 text-xs sm:text-base">
-                            {item.meal.name}
+                            {item?.meal?.name || "Meal unavailable"}
                           </h3>
                           <p className="text-orange-600 font-bold text-xs sm:text-base flex-shrink-0">
                             ₹{item.totalPrice}
                           </p>
                         </div>
                         <p className="text-xs text-gray-500 line-clamp-1 mb-2">
-                          {item.meal.description}
+                          {item?.meal?.description || "Description unavailable"}
                         </p>
                         <p className="text-xs sm:text-sm font-semibold text-orange-600 mb-3">
                           ₹{item.price} each
@@ -207,7 +207,7 @@ export default function CartPage() {
                           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                             <button
                               onClick={() =>
-                                updateQuantity(item.meal._id, item.quantity - 1)
+                                updateQuantity(item?.meal?._id, item.quantity - 1)
                               }
                               disabled={addingItems[item.meal._id] || removingItem === item.meal._id}
                               className="p-1 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition"

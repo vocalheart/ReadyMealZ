@@ -480,9 +480,9 @@ export default function CheckoutPage() {
               {/* Items */}
               <div className="space-y-1.5 mb-4 pb-4 border-b border-gray-200 max-h-40 overflow-y-auto">
                 {items && items.length > 0 ? (
-                  items.map((item: any) => (
-                    <div key={item.meal._id} className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600 truncate mr-2">{item.meal.name} × {item.quantity}</span>
+                  items?.filter((item: any) => item?.meal)?.map((item: any) => (
+                    <div key={item?.meal?._id || Math.random()} className="flex justify-between text-xs sm:text-sm">
+                      <span className="text-gray-600 truncate mr-2">{item?.meal?.name || "Meal unavailable"} × {item.quantity}</span>
                       <span className="font-medium text-gray-900 flex-shrink-0">₹{item.totalPrice}</span>
                     </div>
                   ))
