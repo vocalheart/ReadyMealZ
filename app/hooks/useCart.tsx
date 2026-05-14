@@ -1,6 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import { fetchCart, addToCart, updateCartItem, removeFromCart, clearCart, clearError } from "../redux/slices/Cartslice";
+import {
+  fetchCart,
+  addToCart,
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+  clearError,
+} from "../redux/slices/Cartslice";
 
 /**
  * Custom hook for cart operations
@@ -8,22 +15,40 @@ import { fetchCart, addToCart, updateCartItem, removeFromCart, clearCart, clearE
  */
 export const useCart = () => {
   const dispatch = useDispatch();
+
   const { cart, loading, error, addingItems } = useSelector(
     (state: RootState) => state.cart
   );
 
-  const handleAddToCart = async (mealId: string, quantity: number = 1) => {
+  // ─────────────────────────────────────────────
+  // Actions
+  // ─────────────────────────────────────────────
+
+  const handleAddToCart = async (
+    mealId: string,
+    quantity: number = 1
+  ) => {
+    if (!mealId) return;
+
     return dispatch(addToCart({ mealId, quantity }));
   };
 
-  const handleUpdateQuantity = async (mealId: string, quantity: number) => {
+  const handleUpdateQuantity = async (
+    mealId: string,
+    quantity: number
+  ) => {
+    if (!mealId) return;
+
     if (quantity <= 0) {
       return handleRemoveFromCart(mealId);
     }
+
     return dispatch(updateCartItem({ mealId, quantity }));
   };
 
   const handleRemoveFromCart = async (mealId: string) => {
+    if (!mealId) return;
+
     return dispatch(removeFromCart({ mealId }));
   };
 
@@ -39,19 +64,51 @@ export const useCart = () => {
     dispatch(clearError());
   };
 
-  // Helper: Check if a meal is in cart
+  // ─────────────────────────────────────────────
+  // Safe Cart Items
+  // Filters broken/null meals
+  // ─────────────────────────────────────────────
+
+  const safeItems =
+    cart?.items?.filter(
+      (item) => item && item.meal && item.meal._id
+    ) || [];
+
+  // ─────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────
+
+  // Check if meal exists in cart
   const isInCart = (mealId: string) => {
-    return cart?.items?.some((item) => item.meal._id === mealId) || false;
+    if (!mealId) return false;
+
+    return (
+      safeItems.some(
+        (item) => item?.meal?._id === mealId
+      ) || false
+    );
   };
 
-  // Helper: Get quantity of specific meal in cart
+  // Get quantity of a meal
   const getQuantity = (mealId: string) => {
-    return cart?.items?.find((item) => item.meal._id === mealId)?.quantity || 0;
+    if (!mealId) return 0;
+
+    return (
+      safeItems.find(
+        (item) => item?.meal?._id === mealId
+      )?.quantity || 0
+    );
   };
 
-  // Helper: Get specific item from cart
+  // Get full cart item
   const getCartItem = (mealId: string) => {
-    return cart?.items?.find((item) => item.meal._id === mealId) || null;
+    if (!mealId) return null;
+
+    return (
+      safeItems.find(
+        (item) => item?.meal?._id === mealId
+      ) || null
+    );
   };
 
   return {
@@ -60,7 +117,10 @@ export const useCart = () => {
     loading,
     error,
     addingItems,
-    items: cart?.items || [],
+
+    // Safe filtered items
+    items: safeItems,
+
     total: cart?.cartTotal || 0,
     itemCount: cart?.totalItems || 0,
 
