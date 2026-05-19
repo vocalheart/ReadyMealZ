@@ -18,9 +18,7 @@ export default function Footer() {
 
   const quickLinks = [
     { label: "Menu", href: "/menu" },
-    { label: "Subscribe", href: "/subscribe" },
     { label: "Bulk Orders", href: "/bulk-orders" },
-    { label: "Track Order", href: "/orders" },
   ];
 
   const supportLinks = [
@@ -61,14 +59,14 @@ export default function Footer() {
     {
       icon: MapPin,
       label: "Address",
-      value: "Arera Colony, Bhopal, MP 462016",
+      value: "Duggal Complex, Shop No. 2 Ground Floor, Raisen Rd, Govind Garden, Bhopal, MP 462023",
       href: "#",
     },
     {
       icon: Phone,
       label: "Phone",
-      value: "+91 98765 43210",
-      href: "tel:+919876543210",
+      value: "+91 96303 02626",
+      href: "tel:+919630302626",
     },
     {
       icon: Mail,
@@ -80,33 +78,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-white text-gray-700 border-t border-gray-200">
-      {/* Newsletter Section */}
-      <div className="border-b border-gray-200 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 items-center">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Get Fresh Meals Delivered
-              </h3>
-              <p className="text-sm text-gray-600">
-                Subscribe to our newsletter for exclusive offers and updates
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
-              />
-              <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0">
-                Subscribe
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+     
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
@@ -267,7 +239,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-600 text-center sm:text-left">
             <p className="flex items-center justify-center sm:justify-start gap-1.5">
-              © {currentYear} A1Meals. All rights reserved.
+              © {currentYear} ReadyMealsZ. All rights reserved.
               <span className="hidden sm:inline text-gray-400">|</span>
               <span className="hidden sm:inline">Made with</span>
               <Heart className="w-4 h-4 text-red-500 inline" />

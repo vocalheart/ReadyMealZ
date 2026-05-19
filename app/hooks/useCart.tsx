@@ -48,18 +48,14 @@ export const useCart = () => {
 
   const handleRemoveFromCart = async (mealId: string) => {
     if (!mealId) return;
-
     return dispatch(removeFromCart({ mealId }));
   };
-
   const handleClearCart = async () => {
     return dispatch(clearCart());
   };
-
   const handleFetchCart = async () => {
     return dispatch(fetchCart());
   };
-
   const handleClearError = () => {
     dispatch(clearError());
   };
@@ -99,7 +95,6 @@ export const useCart = () => {
       )?.quantity || 0
     );
   };
-
   // Get full cart item
   const getCartItem = (mealId: string) => {
     if (!mealId) return null;
@@ -110,7 +105,6 @@ export const useCart = () => {
       ) || null
     );
   };
-
   return {
     // State
     cart,
