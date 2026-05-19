@@ -245,7 +245,6 @@ export default function Footer() {
               <Heart className="w-4 h-4 text-red-500 inline" />
               <span className="hidden sm:inline">in Bhopal</span>
             </p>
-
             {/* Footer Links */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
               <Link
