@@ -6,34 +6,20 @@ import { useCart } from "../hooks/useCart";
 import {Trash2,ShoppingCart,ArrowLeft,Loader,Plus,Minus,AlertCircle,Check,TrendingDown} from "lucide-react";
 import ProtectedRoute from "../components/ProtectedRoute";
 /**
+ * 
+ * 
  * Cart Page Component - Enhanced UI/UX
- * Fully responsive with mobile-first design (10px minimum text)
- */
+ * Fully responsive with mobile-first design (10px minimum text);
+ * 
+ * 
+**/
 export default function CartPage() {
-  const {
-    cart,
-    loading,
-    error,
-    items,
-    total,
-    itemCount,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-    fetchCart,
-    clearError,
-    addingItems,
-  } = useCart();
-
+  const {cart,loading, error,items,total,itemCount,updateQuantity,removeFromCart,clearCart,fetchCart,clearError,addingItems} = useCart();
   const [removingItem, setRemovingItem] = useState<string | null>(null);
   const [clearedCart, setClearedCart] = useState(false);
-
   useEffect(() => {
-    // Fetch cart on component mount
-    console.log("📦 Fetching cart...");
     fetchCart();
   }, [fetchCart]);
-
   // Loading state
   if (loading && !cart) {
     return (
@@ -43,7 +29,7 @@ export default function CartPage() {
             <Loader className="w-8 h-8 text-orange-500 animate-spin" />
           </div>
           <p className="text-gray-600 font-medium text-xs sm:text-base">
-            Loading your cart...
+            Loading
           </p>
         </div>
       </div>
@@ -63,7 +49,6 @@ export default function CartPage() {
       setRemovingItem(null);
     }
   };
-
   const handleClearCart = async () => {
     if (window.confirm("Are you sure you want to clear your entire cart?")) {
       try {
@@ -75,7 +60,6 @@ export default function CartPage() {
       }
     }
   };
-
   return (
     <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -111,7 +95,6 @@ export default function CartPage() {
             )}
           </div>
         </div>
-
         {/* Success Message */}
         {clearedCart && (
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl flex items-start gap-2 sm:gap-3 animate-pulse">
@@ -136,7 +119,6 @@ export default function CartPage() {
             </button>
           </div>
         )}
-
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Cart Items Section */}
           <div className="lg:col-span-2">
@@ -200,7 +182,6 @@ export default function CartPage() {
                         <p className="text-xs sm:text-sm font-semibold text-orange-600 mb-3">
                           ₹{item.price} each
                         </p>
-
                         {/* Quantity Control & Delete - Mobile */}
                         <div className="flex sm:hidden items-center justify-between">
                           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
@@ -232,7 +213,6 @@ export default function CartPage() {
                           </button>
                         </div>
                       </div>
-
                       {/* Quantity Control & Delete - Desktop */}
                       <div className="hidden sm:flex flex-col items-end justify-between gap-4">
                         <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
@@ -270,7 +250,6 @@ export default function CartPage() {
               </div>
             )}
           </div>
-
           {/* Order Summary Sidebar */}
           {items.length > 0 && (
             <div className="lg:col-span-1">
@@ -278,7 +257,6 @@ export default function CartPage() {
                 <h2 className="text-sm sm:text-lg font-bold text-gray-900 mb-4">
                   Order Summary
                 </h2>
-
                 {/* Savings Badge */}
                 {savings > 0 && (
                   <div className="mb-4 p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
@@ -290,7 +268,6 @@ export default function CartPage() {
                     </div>
                   </div>
                 )}
-
                 {/* Summary Breakdown */}
                 <div className="space-y-2 sm:space-y-3 mb-4 pb-4 border-b border-gray-200">
                   <div className="flex justify-between text-xs sm:text-sm">
@@ -306,7 +283,6 @@ export default function CartPage() {
                     <span className="font-semibold text-gray-900">₹{taxAmount}</span>
                   </div>
                 </div>
-
                 {/* Final Total */}
                 <div className="flex justify-between items-center mb-6">
                   <span className="font-bold text-gray-900 text-sm sm:text-base">
@@ -340,7 +316,6 @@ export default function CartPage() {
                     Continue Shopping
                   </Link>
                 </div>
-
                 {/* Info */}
                 <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                   <div className="flex items-start gap-2 p-2 sm:p-3 bg-blue-50 rounded-lg">

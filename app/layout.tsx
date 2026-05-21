@@ -5,6 +5,7 @@ import ConditionalLayout from "./components/Conditionallayout";
 import ReduxProvider from "./redux/Provider";
 import AuthLoader from "./redux/AuthLoader";
 import ToastProvider from './components/ToastProvider';
+import GlobalChatBot from "./components/GlobalChatBot";
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -37,7 +38,9 @@ export default function RootLayout({
           {/* Auto fetch user on app load */}
           <ToastProvider />
           <AuthLoader>
-            <ConditionalLayout>{children}</ConditionalLayout>
+            <ConditionalLayout>{children}
+                  <GlobalChatBot />
+            </ConditionalLayout>
           </AuthLoader>
         </ReduxProvider>
       </body>
