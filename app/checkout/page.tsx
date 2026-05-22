@@ -141,9 +141,12 @@ export default function CheckoutPage() {
       const { order, razorpayOrder } = response.data.data;
 
       if (paymentMethod === "cod") {
+
+        await dispatch(fetchCart() as any);
         setOrderSuccess(true);
         setCreatedOrderId(order._id);
         setTimeout(() => router.push(`/orders/${order._id}`), 2000);
+
         return;
       }
 
@@ -165,6 +168,7 @@ export default function CheckoutPage() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
+            await dispatch(fetchCart() as any);
             setOrderSuccess(true);
             setCreatedOrderId(order._id);
             setTimeout(() => router.push(`/orders/${order._id}`), 2000);
