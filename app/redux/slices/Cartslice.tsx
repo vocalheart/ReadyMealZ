@@ -77,7 +77,7 @@ export const addToCart = createAsyncThunk(
         { withCredentials: true }
       );
       if (res.data.success) {
-        return res.data.data.cart;
+        return res.data.data;
       }
     } catch (error: any) {
       return rejectWithValue(
@@ -125,7 +125,7 @@ export const removeFromCart = createAsyncThunk(
         withCredentials: true,
       });
       if (res.data.success) {
-        return res.data.data.cart;
+        return res.data.data;
       }
     } catch (error: any) {
       return rejectWithValue(

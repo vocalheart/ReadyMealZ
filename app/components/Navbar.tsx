@@ -24,7 +24,7 @@ function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, loading } = useSelector((state: RootState) => state.auth);
-  const { itemCount }     = useCart();
+  const { itemCount, fetchCart } = useCart();
   const isLoggedIn        = !!user;
 
   // Close dropdown on outside click
@@ -77,7 +77,11 @@ function Navbar() {
     setDropdownOpen(false);
     router.push("/login");
   };
-
+useEffect(() => {
+  if (isLoggedIn) {
+    fetchCart();
+  }
+}, [isLoggedIn]);
   const navItems = [
     { href: "/menu",           label: "Meals",           icon: FiHome      },
     { href: "/tiffinservices", label: "Tiffin Services", icon: FiPackage   },
