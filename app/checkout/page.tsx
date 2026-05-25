@@ -246,11 +246,9 @@ export default function CheckoutPage() {
 
   const steps = ["address", "payment", "review"];
   const stepNames = { address: "Delivery", payment: "Payment", review: "Review" };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-
         {/* ── Header ── */}
         <div className="mb-6 sm:mb-8">
           <Link href="/cart" className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium mb-3 sm:mb-4 text-xs sm:text-sm transition">
@@ -259,7 +257,6 @@ export default function CheckoutPage() {
           </Link>
           <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Checkout</h1>
           <p className="text-xs sm:text-base text-gray-600 mt-1 sm:mt-2">Complete your order securely</p>
-
           {/* Progress — Mobile */}
           <div className="md:hidden flex gap-2 overflow-x-auto mt-4">
             {steps.map((step, idx) => (
@@ -271,7 +268,6 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-
           {/* Progress — Desktop */}
           <div className="hidden md:flex justify-center gap-8 my-6">
             {steps.map((step, idx) => (
