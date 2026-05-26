@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Minus, AlertCircle, Star, Clock, Flame, X, ChevronRight } from "lucide-react";
+import { Plus, Minus, AlertCircle, Star, Clock, Flame, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "../hooks/useCart";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -99,6 +99,152 @@ const TAG_COLORS: Record<string, string> = {
 const getTagColor = (name: string) =>
   TAG_COLORS[name] ?? "bg-gray-50 text-gray-500 border-gray-100";
 
+/* ─── Image Slider ───────────────────────────── */
+function ImageSlider({
+  images,
+  name,
+  isFeatured,
+  foodType,
+  hasDiscount,
+  discountPercentage,
+}: {
+  images: MealImage[];
+  name: string;
+  isFeatured?: boolean;
+  foodType?: FoodType;
+  hasDiscount: boolean;
+  discountPercentage?: number;
+}) {
+  const [current, setCurrent] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const total = images.length;
+
+  const prev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrent((c) => (c - 1 + total) % total);
+  };
+  const next = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrent((c) => (c + 1) % total);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) setCurrent((c) => (c + 1) % total);
+      else setCurrent((c) => (c - 1 + total) % total);
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  const activeImg = images[current];
+
+  return (
+    <div
+      className="relative h-52 sm:h-64 bg-gray-100 rounded-xl overflow-hidden mb-4 flex-shrink-0 select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Images */}
+      <div
+        className="flex h-full transition-transform duration-300 ease-in-out"
+        style={{ transform: `translateX(-${current * 100}%)`, width: `${total * 100}%` }}
+      >
+        {images.map((img, i) => (
+          <div key={i} className="h-full flex-shrink-0" style={{ width: `${100 / total}%` }}>
+            {img.url ? (
+              <img
+                src={img.url}
+                alt={img.altText || name}
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-200 flex items-center justify-center">
+                <span className="text-6xl">🍽️</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Prev / Next arrows — only show if multiple images */}
+      {total > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition backdrop-blur-sm"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition backdrop-blur-sm"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
+                className={`rounded-full transition-all ${
+                  i === current
+                    ? "w-4 h-1.5 bg-white"
+                    : "w-1.5 h-1.5 bg-white/50 hover:bg-white/75"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Counter */}
+          <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-black/40 text-white text-[10px] font-medium rounded-full backdrop-blur-sm">
+            {current + 1}/{total}
+          </span>
+        </>
+      )}
+
+      {/* Badges */}
+      {foodType && (
+        <span
+          className={`absolute top-3 ${total > 1 ? "right-10" : "right-3"} px-2.5 py-1 rounded-full text-[10px] font-semibold text-white shadow-sm ${
+            foodType.name?.toLowerCase().includes("veg") &&
+            !foodType.name?.toLowerCase().includes("non")
+              ? "bg-green-500"
+              : "bg-red-500"
+          }`}
+          style={total > 1 ? { right: "2.75rem" } : {}}
+        >
+          {foodType.name}
+        </span>
+      )}
+      {isFeatured && (
+        <span className="absolute top-3 left-3 px-2.5 py-1 bg-amber-400 text-white text-[10px] font-semibold rounded-full shadow-sm flex items-center gap-1">
+          <Star className="w-3 h-3 fill-white" /> Featured
+        </span>
+      )}
+      {hasDiscount && (
+        <span className="absolute bottom-3 left-3 px-2.5 py-1 bg-green-500 text-white text-[11px] font-bold rounded-full shadow-sm">
+          {discountPercentage}% OFF
+        </span>
+      )}
+    </div>
+  );
+}
+
 /* ─── Nutrition Row ─────────────────────────── */
 function NutritionRow({ label, value, unit }: { label: string; value?: number; unit: string }) {
   if (!value) return null;
@@ -188,42 +334,15 @@ function MealDetailContent({
 
   return (
     <div>
-      {/* Image */}
-      <div className="relative h-52 sm:h-64 bg-gray-100 rounded-xl overflow-hidden mb-4 flex-shrink-0">
-        {meal.images?.[0]?.url ? (
-          <img
-            src={meal.images[0].url}
-            alt={meal.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-200 flex items-center justify-center">
-            <span className="text-6xl">🍽️</span>
-          </div>
-        )}
-        {meal.foodType && (
-          <span
-            className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-semibold text-white shadow-sm ${
-              meal.foodType.name?.toLowerCase().includes("veg") &&
-              !meal.foodType.name?.toLowerCase().includes("non")
-                ? "bg-green-500"
-                : "bg-red-500"
-            }`}
-          >
-            {meal.foodType.name}
-          </span>
-        )}
-        {meal.isFeatured && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 bg-amber-400 text-white text-[10px] font-semibold rounded-full shadow-sm flex items-center gap-1">
-            <Star className="w-3 h-3 fill-white" /> Featured
-          </span>
-        )}
-        {hasDiscount && (
-          <span className="absolute bottom-3 left-3 px-2.5 py-1 bg-green-500 text-white text-[11px] font-bold rounded-full shadow-sm">
-            {meal.discountPercentage}% OFF
-          </span>
-        )}
-      </div>
+      {/* Image Slider */}
+      <ImageSlider
+        images={meal.images?.length > 0 ? meal.images : [{ url: "", key: "" }]}
+        name={meal.name}
+        isFeatured={meal.isFeatured}
+        foodType={meal.foodType}
+        hasDiscount={hasDiscount}
+        discountPercentage={meal.discountPercentage}
+      />
 
       {/* Name + Category */}
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -422,9 +541,7 @@ function MealDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      {/* Dialog */}
       <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           <span className="text-sm font-semibold text-gray-700">Meal Details</span>
@@ -480,19 +597,15 @@ function MealDetailBottomSheet({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      {/* Sheet */}
       <div
         ref={sheetRef}
         className="relative z-10 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col"
         style={{ animation: "slideUp 0.28s cubic-bezier(0.32,0.72,0,1)" }}
       >
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-100 flex-shrink-0">
           <span className="text-sm font-semibold text-gray-700">Meal Details</span>
           <button
@@ -502,7 +615,6 @@ function MealDetailBottomSheet({
             <X className="w-4 h-4" />
           </button>
         </div>
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <MealDetailContent meal={meal} loading={loading} onClose={onClose} />
         </div>
@@ -533,7 +645,6 @@ export function MealCard({ meal }: { meal: Meal }) {
   const hasDiscount = (meal.discountPercentage ?? 0) > 0;
   const displayPrice = hasDiscount ? meal.discountPrice : meal.price;
 
-  /* Track breakpoint for dialog vs bottom sheet */
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
     setIsLg(mq.matches);
@@ -612,6 +723,15 @@ export function MealCard({ meal }: { meal: Meal }) {
           {hasDiscount && (
             <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
               {meal.discountPercentage}% OFF
+            </span>
+          )}
+          {/* Multiple images indicator on card */}
+          {meal.images?.length > 1 && (
+            <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/40 text-white text-[9px] font-medium rounded-full backdrop-blur-sm flex items-center gap-0.5">
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/>
+              </svg>
+              {meal.images.length}
             </span>
           )}
         </div>
@@ -725,7 +845,7 @@ export function MealCard({ meal }: { meal: Meal }) {
         </div>
       </div>
 
-      {/* ── Detail overlay — dialog on lg, bottom sheet on mobile ── */}
+      {/* ── Detail overlay ── */}
       {isLg ? (
         <MealDetailModal
           mealId={meal._id}
