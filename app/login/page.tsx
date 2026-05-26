@@ -14,7 +14,8 @@ import { User, Lock, Eye, EyeOff, X, Mail, KeyRound, CheckCircle2, ArrowRight, L
 interface LoginForm {
   identifier: string;
   password: string;
-}
+};
+
 
 interface UserType {
   _id: string;
