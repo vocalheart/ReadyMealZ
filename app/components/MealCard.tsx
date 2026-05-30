@@ -12,13 +12,14 @@ interface MealImage {
   url: string;
   key: string;
   altText?: string;
-}
+};
 interface Category {
   _id: string;
   name: string;
   slug?: string;
   mealCount?: number;
 }
+
 interface FoodType {
   _id: string;
   name: string;
@@ -96,8 +97,7 @@ const TAG_COLORS: Record<string, string> = {
   "Comfort Food": "bg-green-50 text-green-600 border-green-100",
   "Coastal Special": "bg-teal-50 text-teal-600 border-teal-100",
 };
-const getTagColor = (name: string) =>
-  TAG_COLORS[name] ?? "bg-gray-50 text-gray-500 border-gray-100";
+const getTagColor = (name: string) => TAG_COLORS[name] ?? "bg-gray-50 text-gray-500 border-gray-100";
 
 /* ─── Image Slider ───────────────────────────── */
 function ImageSlider({
@@ -168,8 +168,7 @@ function ImageSlider({
                 src={img.url}
                 alt={img.altText || name}
                 className="w-full h-full object-cover"
-                draggable={false}
-              />
+                draggable={false}/>
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-200 flex items-center justify-center">
                 <span className="text-6xl">🍽️</span>
@@ -255,7 +254,6 @@ function NutritionRow({ label, value, unit }: { label: string; value?: number; u
     </div>
   );
 }
-
 /* ─── Rating Bar ──────────────────────────────── */
 function RatingBar({ label, value, total }: { label: string; value: number; total: number }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -343,7 +341,6 @@ function MealDetailContent({
         hasDiscount={hasDiscount}
         discountPercentage={meal.discountPercentage}
       />
-
       {/* Name + Category */}
       <div className="flex items-start justify-between gap-2 mb-1">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">{meal.name}</h2>
@@ -381,7 +378,6 @@ function MealDetailContent({
           </div>
         )}
       </div>
-
       {/* Tags */}
       {meal.tags && meal.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
@@ -395,7 +391,6 @@ function MealDetailContent({
           ))}
         </div>
       )}
-
       {/* Nutrition */}
       {hasNutrition && (
         <div className="mb-4">
@@ -494,7 +489,6 @@ function MealDetailContent({
           </div>
         )}
       </div>
-
       {error && (
         <div className="mt-2 flex items-center gap-1.5 p-2 bg-red-50 rounded-lg border border-red-200">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
@@ -657,7 +651,6 @@ export function MealCard({ meal }: { meal: Meal }) {
     const currentPath = window.location.pathname + window.location.search;
     router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
   };
-
   const handleAddClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) { redirectToLogin(); return; }
@@ -674,7 +667,6 @@ export function MealCard({ meal }: { meal: Meal }) {
       await addToCart(meal._id, newQty - quantity);
     }
   };
-
   if (!meal || !meal._id) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">

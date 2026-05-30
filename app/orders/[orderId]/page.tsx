@@ -17,8 +17,17 @@ import {
   X,
   User,
   Home,
+  Zap,
+  Box,
+  Tag,
+  RotateCcw,
+  StickyNote,
+  Navigation,
+  Receipt,
 } from "lucide-react";
 import api from "../../lib/axios";
+
+/* ─── Types (fully matching schema) ─────────────── */
 interface OrderItem {
   _id: string;
   meal: {
@@ -27,12 +36,12 @@ interface OrderItem {
     price: number;
     images?: Array<{ url: string }>;
   };
-  quantity: number;
+  name: string;       // schema: required — meal name snapshot
   price: number;
+  quantity: number;
   totalPrice: number;
 }
 
-// Matches your Address.schema fields exactly
 interface DeliveryAddress {
   _id: string;
   recipientName: string;
@@ -44,6 +53,12 @@ interface DeliveryAddress {
   isDefault?: boolean;
 }
 
+interface StatusHistoryEntry {
+  status: string;
+  timestamp: string;
+  notes: string;
+}
+
 interface Order {
   _id: string;
   orderNumber: string;
@@ -53,32 +68,54 @@ interface Order {
     phone: string;
   };
   items: OrderItem[];
+
+  // ── amounts (all from schema) ──
   subtotal: number;
-  tax: number;
+  discount: number;
   deliveryCharge: number;
+  surgeCharge: number;
+  packagingCharge: number;
+  tax: number;
   orderTotal: number;
+  distanceKm: number;
+
+  // ── payment ──
   paymentMethod: "cod" | "online" | "upi" | "wallet";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  paymentReference?: string | null;
+
+  // ── status ──
   orderStatus:
-  | "placed"
-  | "confirmed"
-  | "preparing"
-  | "ready"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled";
+    | "placed"
+    | "confirmed"
+    | "preparing"
+    | "ready"
+    | "out_for_delivery"
+    | "delivered"
+    | "cancelled"
+    | "returned";
+
+  statusHistory?: StatusHistoryEntry[];
+
+  // ── delivery ──
   deliveryAddress: DeliveryAddress;
-  specialRequests?: string;
-  createdAt: string;
   estimatedDeliveryTime?: string;
   actualDeliveryTime?: string;
-  statusHistory?: Array<{
-    status: string;
-    timestamp: string;
-    notes: string;
-  }>;
+
+  // ── misc ──
+  notes?: string;
+  specialRequests?: string;
+
+  // ── cancellation / refund ──
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
+  refundAmount?: number;
+  refundStatus?: "pending" | "processed" | "rejected";
+
+  createdAt: string;
 }
 
+/* ─── Constants ──────────────────────────────────── */
 const ORDER_STATUSES = [
   "placed",
   "confirmed",
@@ -101,7 +138,6 @@ const statusConfig = {
   placed: {
     icon: Package,
     label: "Order Placed",
-    color: "blue",
     bgColor: "bg-blue-50",
     borderColor: "border-blue-200",
     textColor: "text-blue-600",
@@ -109,7 +145,6 @@ const statusConfig = {
   confirmed: {
     icon: CheckCircle,
     label: "Order Confirmed",
-    color: "purple",
     bgColor: "bg-purple-50",
     borderColor: "border-purple-200",
     textColor: "text-purple-600",
@@ -117,7 +152,6 @@ const statusConfig = {
   preparing: {
     icon: Package,
     label: "Preparing Your Order",
-    color: "orange",
     bgColor: "bg-orange-50",
     borderColor: "border-orange-200",
     textColor: "text-orange-600",
@@ -125,7 +159,6 @@ const statusConfig = {
   ready: {
     icon: Package,
     label: "Ready for Pickup",
-    color: "yellow",
     bgColor: "bg-yellow-50",
     borderColor: "border-yellow-200",
     textColor: "text-yellow-600",
@@ -133,7 +166,6 @@ const statusConfig = {
   out_for_delivery: {
     icon: Truck,
     label: "Out for Delivery",
-    color: "green",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
     textColor: "text-green-600",
@@ -141,7 +173,6 @@ const statusConfig = {
   delivered: {
     icon: CheckCircle,
     label: "Delivered",
-    color: "green",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
     textColor: "text-green-600",
@@ -149,10 +180,16 @@ const statusConfig = {
   cancelled: {
     icon: AlertCircle,
     label: "Order Cancelled",
-    color: "red",
     bgColor: "bg-red-50",
     borderColor: "border-red-200",
     textColor: "text-red-600",
+  },
+  returned: {
+    icon: RotateCcw,
+    label: "Order Returned",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
+    textColor: "text-gray-600",
   },
 };
 
@@ -170,6 +207,13 @@ const paymentStatusColor: Record<string, string> = {
   refunded: "text-blue-600 bg-blue-50 border-blue-200",
 };
 
+const refundStatusColor: Record<string, string> = {
+  pending: "text-yellow-700 bg-yellow-50 border-yellow-200",
+  processed: "text-green-700 bg-green-50 border-green-200",
+  rejected: "text-red-700 bg-red-50 border-red-200",
+};
+
+/* ─── Component ──────────────────────────────────── */
 export default function OrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -187,18 +231,14 @@ export default function OrderDetailsPage() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await api.get(`/orders/${orderId}`, {
-          withCredentials: true,
-        });
+        const response = await api.get(`/orders/${orderId}`, { withCredentials: true });
         if (response.data.success) {
           setOrder(response.data.data);
         } else {
           setError(response.data.message || "Failed to fetch order");
         }
       } catch (err: any) {
-        setError(
-          err.response?.data?.message || err.message || "Failed to fetch order"
-        );
+        setError(err.response?.data?.message || err.message || "Failed to fetch order");
       } finally {
         setLoading(false);
       }
@@ -220,7 +260,7 @@ export default function OrderDetailsPage() {
         { withCredentials: true }
       );
       if (response.data.success) {
-        setOrder((prev) => (prev ? { ...prev, orderStatus: "cancelled" } : null));
+        setOrder((prev) => prev ? { ...prev, orderStatus: "cancelled" } : null);
         setCancelModal(false);
         setCancelReason("");
         setCancelSuccess(true);
@@ -229,15 +269,13 @@ export default function OrderDetailsPage() {
         setCancelError(response.data.message || "Failed to cancel order");
       }
     } catch (err: any) {
-      setCancelError(
-        err.response?.data?.message || err.message || "Failed to cancel order"
-      );
+      setCancelError(err.response?.data?.message || err.message || "Failed to cancel order");
     } finally {
       setCancelLoading(false);
     }
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  /* ── Loading ── */
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -249,7 +287,7 @@ export default function OrderDetailsPage() {
     );
   }
 
-  // ── Error ──────────────────────────────────────────────────────────────────
+  /* ── Error ── */
   if (error || !order) {
     return (
       <div className="min-h-screen bg-gray-50 p-4">
@@ -268,22 +306,31 @@ export default function OrderDetailsPage() {
         </div>
       </div>
     );
-  };
+  }
 
-  const statusInfo = statusConfig[order.orderStatus as keyof typeof statusConfig];
+  const statusInfo = statusConfig[order.orderStatus as keyof typeof statusConfig] ?? statusConfig.placed;
   const StatusIcon = statusInfo.icon;
   const canCancel = ["placed", "confirmed"].includes(order.orderStatus);
   const currentStatusIdx = ORDER_STATUSES.indexOf(order.orderStatus as any);
+  const isCancelled = order.orderStatus === "cancelled" || order.orderStatus === "returned";
 
-  // ── Address helpers ────────────────────────────────────────────────────────
+  /* ── Address helpers (graceful fallback) ── */
   const addr = order.deliveryAddress;
-  // Support both schema shapes gracefully
-  const addrName = addr?.recipientName || (addr as any)?.name || "—";
-  const addrPhone = addr?.phoneNumber || (addr as any)?.phone || "—";
-  const addrFull = addr?.fullAddress || (addr as any)?.address || "—";
-  const addrCity = addr?.city || "—";
-  const addrState = addr?.state || "—";
+  const addrName    = addr?.recipientName  || (addr as any)?.name     || "—";
+  const addrPhone   = addr?.phoneNumber    || (addr as any)?.phone    || "—";
+  const addrFull    = addr?.fullAddress    || (addr as any)?.address  || "—";
+  const addrCity    = addr?.city    || "—";
+  const addrState   = addr?.state   || "—";
   const addrPincode = addr?.pincode || "—";
+
+  /* ── Amount helpers ── */
+  const surgeCharge    = Number(order.surgeCharge    ?? 0);
+  const packagingCharge = Number(order.packagingCharge ?? 0);
+  const discount       = Number(order.discount       ?? 0);
+  const distanceKm     = Number(order.distanceKm     ?? 0);
+  const refundAmount   = Number(order.refundAmount   ?? 0);
+
+  const hasExtraCharges = surgeCharge > 0 || packagingCharge > 0 || discount > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -318,6 +365,13 @@ export default function OrderDetailsPage() {
                   hour: "2-digit", minute: "2-digit",
                 })}
               </p>
+              {/* Distance pill */}
+              {distanceKm > 0 && (
+                <span className="inline-flex items-center gap-1 mt-2 text-xs bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                  <Navigation className="w-3 h-3 text-gray-400" />
+                  {distanceKm} km away
+                </span>
+              )}
             </div>
             <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition font-medium text-xs sm:text-sm text-gray-700 w-full sm:w-auto">
               <Download className="w-3 sm:w-4 h-3 sm:h-4" />
@@ -326,36 +380,56 @@ export default function OrderDetailsPage() {
           </div>
 
           {/* ── Progress tracker ── */}
-          {order.orderStatus !== "cancelled" && (
+          {!isCancelled && (
             <div className="mt-4 sm:mt-6">
               <div className="flex items-center gap-0">
                 {ORDER_STATUSES.map((status, idx) => {
                   const isCompleted = currentStatusIdx >= idx;
-                  const isCurrent = currentStatusIdx === idx;
+                  const isCurrent   = currentStatusIdx === idx;
                   return (
                     <React.Fragment key={status}>
                       <div className="flex flex-col items-center flex-shrink-0">
-                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all ${isCompleted
-                          ? "bg-green-500 border-green-500"
-                          : "bg-white border-gray-300"
-                          } ${isCurrent ? "ring-2 ring-green-300 ring-offset-1" : ""}`} />
-                        <span className={`text-xs mt-1 hidden sm:block text-center max-w-[60px] leading-tight ${isCompleted ? "text-green-600 font-medium" : "text-gray-400"
-                          }`}>
+                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 transition-all ${
+                          isCompleted ? "bg-green-500 border-green-500" : "bg-white border-gray-300"
+                        } ${isCurrent ? "ring-2 ring-green-300 ring-offset-1" : ""}`} />
+                        <span className={`text-xs mt-1 hidden sm:block text-center max-w-[60px] leading-tight ${
+                          isCompleted ? "text-green-600 font-medium" : "text-gray-400"
+                        }`}>
                           {STATUS_LABELS[status]}
                         </span>
                       </div>
                       {idx < ORDER_STATUSES.length - 1 && (
-                        <div className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all ${currentStatusIdx > idx ? "bg-green-500" : "bg-gray-300"
-                          }`} />
+                        <div className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all ${
+                          currentStatusIdx > idx ? "bg-green-500" : "bg-gray-300"
+                        }`} />
                       )}
                     </React.Fragment>
                   );
                 })}
               </div>
-              {/* Mobile step label */}
               <p className="sm:hidden text-xs text-green-600 font-medium mt-2 text-center">
                 {STATUS_LABELS[order.orderStatus] || order.orderStatus}
               </p>
+            </div>
+          )}
+
+          {/* ── Cancellation info banner ── */}
+          {order.orderStatus === "cancelled" && (order.cancelReason || order.cancelledAt) && (
+            <div className="mt-4 p-3 bg-white border border-red-200 rounded-xl flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                {order.cancelReason && (
+                  <p className="text-xs sm:text-sm text-red-700 font-medium">Reason: {order.cancelReason}</p>
+                )}
+                {order.cancelledAt && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Cancelled on {new Date(order.cancelledAt).toLocaleDateString("en-IN", {
+                      day: "numeric", month: "short", year: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -364,7 +438,7 @@ export default function OrderDetailsPage() {
           {/* ── Main content ── */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
 
-            {/* Order Items */}
+            {/* ── Order Items ── */}
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-8">
               <h2 className="text-sm sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6">
                 Order Items ({order.items.length})
@@ -376,7 +450,8 @@ export default function OrderDetailsPage() {
                     <div key={item._id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
                       {item.meal.images?.[0]?.url ? (
                         <img
-                          src={item?.meal?.images?.[0]?.url} alt={item?.meal?.name || "Meal unavailable"}
+                          src={item.meal.images[0].url}
+                          alt={item.name || item.meal?.name || "Meal"}
                           className="w-16 sm:w-20 h-16 sm:h-20 rounded-lg object-cover flex-shrink-0"
                         />
                       ) : (
@@ -385,7 +460,10 @@ export default function OrderDetailsPage() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2">{item?.meal?.name || "Meal unavailable"}</h3>
+                        {/* Use schema `name` field (snapshot), fall back to populated meal.name */}
+                        <h3 className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2">
+                          {item.name || item.meal?.name || "Meal unavailable"}
+                        </h3>
                         <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
                         <p className="text-xs sm:text-sm font-semibold text-orange-600 mt-1">₹{item.price} each</p>
                       </div>
@@ -407,13 +485,10 @@ export default function OrderDetailsPage() {
               </div>
 
               <div className="bg-gray-50 rounded-xl p-3 sm:p-5 space-y-2 sm:space-y-3">
-                {/* Recipient name */}
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                   <p className="font-semibold text-gray-900 text-xs sm:text-base">{addrName}</p>
                 </div>
-
-                {/* Full address */}
                 <div className="flex items-start gap-2">
                   <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                   <div>
@@ -423,8 +498,6 @@ export default function OrderDetailsPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* Phone */}
                 <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
                   <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                   <p className="text-gray-700 text-xs sm:text-sm font-medium">{addrPhone}</p>
@@ -432,7 +505,22 @@ export default function OrderDetailsPage() {
               </div>
             </div>
 
-            {/* Special Requests */}
+            {/* ── Notes ── */}
+            {order.notes && (
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-8">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <StickyNote className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                  </div>
+                  <h2 className="text-sm sm:text-lg font-bold text-gray-900">Order Notes</h2>
+                </div>
+                <p className="text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs sm:text-sm leading-relaxed">
+                  {order.notes}
+                </p>
+              </div>
+            )}
+
+            {/* ── Special Requests ── */}
             {order.specialRequests && (
               <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-8">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -447,7 +535,35 @@ export default function OrderDetailsPage() {
               </div>
             )}
 
-            {/* Status history (optional) */}
+            {/* ── Refund Info (cancelled orders) ── */}
+            {order.orderStatus === "cancelled" && (refundAmount > 0 || order.refundStatus) && (
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-8">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-sm sm:text-lg font-bold text-gray-900">Refund Details</h2>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 sm:p-5 space-y-3">
+                  {refundAmount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs sm:text-sm text-gray-600">Refund Amount</span>
+                      <span className="text-sm sm:text-base font-bold text-green-700">₹{refundAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.refundStatus && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs sm:text-sm text-gray-600">Refund Status</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold border capitalize ${refundStatusColor[order.refundStatus] || "text-gray-700 bg-gray-100 border-gray-200"}`}>
+                        {order.refundStatus}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Status History / Timeline ── */}
             {order.statusHistory && order.statusHistory.length > 0 && (
               <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-8">
                 <h2 className="text-sm sm:text-lg font-bold text-gray-900 mb-4">Order Timeline</h2>
@@ -486,14 +602,18 @@ export default function OrderDetailsPage() {
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-6 sticky top-4 sm:top-24">
               <h2 className="text-sm sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Order Summary</h2>
 
-              {/* Breakdown */}
-              <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200">
+              {/* ── Price breakdown ── */}
+              <div className="space-y-2 sm:space-y-2.5 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium text-gray-900">₹{Number(order.subtotal).toFixed(2)}</span>
                 </div>
+
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Delivery</span>
+                  <span className="text-gray-600 flex items-center gap-1">
+                    <Truck className="w-3 h-3 text-gray-400" /> Delivery
+                    {distanceKm > 0 && <span className="text-gray-400">({distanceKm} km)</span>}
+                  </span>
                   <span className="font-medium text-gray-900">
                     {order.deliveryCharge === 0 ? (
                       <span className="text-green-600">Free</span>
@@ -502,19 +622,52 @@ export default function OrderDetailsPage() {
                     )}
                   </span>
                 </div>
+
+                {/* Surge charge — from schema */}
+                {surgeCharge > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-orange-400" /> Surge Charge
+                    </span>
+                    <span className="font-medium text-orange-600">+₹{surgeCharge.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {/* Packaging charge — from schema */}
+                {packagingCharge > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Box className="w-3 h-3 text-gray-400" /> Packaging
+                    </span>
+                    <span className="font-medium text-gray-900">₹{packagingCharge.toFixed(2)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Tax (5%)</span>
-                  {/* ✅ Fixed: toFixed(2) removes floating point noise */}
+                  <span className="text-gray-600 flex items-center gap-1">
+                    <Receipt className="w-3 h-3 text-gray-400" /> Tax
+                  </span>
                   <span className="font-medium text-gray-900">₹{Number(order.tax).toFixed(2)}</span>
                 </div>
+
+                {/* Discount — from schema */}
+                {discount > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-green-600 flex items-center gap-1">
+                      <Tag className="w-3 h-3" /> Discount
+                    </span>
+                    <span className="font-medium text-green-600">−₹{discount.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
+              {/* Total */}
               <div className="flex justify-between mb-4 sm:mb-5 text-sm sm:text-lg">
                 <span className="font-bold text-gray-900">Total</span>
                 <span className="font-bold text-orange-600">₹{Number(order.orderTotal).toFixed(2)}</span>
               </div>
 
-              {/* Payment Status */}
+              {/* ── Payment info ── */}
               <div className="mb-3 space-y-2">
                 <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Payment Status</p>
@@ -529,6 +682,14 @@ export default function OrderDetailsPage() {
                     {paymentMethodLabel[order.paymentMethod] || order.paymentMethod}
                   </p>
                 </div>
+
+                {/* Payment reference — from schema */}
+                {order.paymentReference && (
+                  <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Payment Reference</p>
+                    <p className="font-mono text-xs text-gray-700 break-all">{order.paymentReference}</p>
+                  </div>
+                )}
 
                 <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Order Date</p>
@@ -550,9 +711,22 @@ export default function OrderDetailsPage() {
                     </p>
                   </div>
                 )}
+
+                {/* Actual delivery time — from schema */}
+                {order.actualDeliveryTime && (
+                  <div className="p-2.5 sm:p-3 bg-green-50 rounded-lg border border-green-100">
+                    <p className="text-xs text-green-600 mb-1">Delivered At</p>
+                    <p className="font-semibold text-green-700 text-xs sm:text-sm">
+                      {new Date(order.actualDeliveryTime).toLocaleString("en-IN", {
+                        day: "numeric", month: "short",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Cancel Button */}
+              {/* Cancel button */}
               {canCancel && (
                 <button
                   onClick={() => setCancelModal(true)}
@@ -581,7 +755,9 @@ export default function OrderDetailsPage() {
             </div>
 
             <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              Are you sure you want to cancel order <span className="font-semibold text-gray-800">#{order.orderNumber}</span>? This action cannot be undone.
+              Are you sure you want to cancel order{" "}
+              <span className="font-semibold text-gray-800">#{order.orderNumber}</span>?
+              This action cannot be undone.
             </p>
 
             {cancelError && (
